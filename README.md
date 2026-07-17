@@ -1,3 +1,181 @@
+# Bulk Transcriptomics Autoencoder: Batch vs Biological Signal in Latent Space
+
+**English** | [中文](#中文说明)
+
+A PyTorch autoencoder for bulk RNA-seq that **quantifies** how much of the latent space is taken up by batch effect versus biological signal, and then attempts cross-cohort alignment with a **batch discriminator (adversarial)** and a **triplet loss**.
+
+What makes this repo different from most batch-correction code: it doesn't just hand you a pre-tuned final result — it **honestly documents how hard adversarial training is to tune and the exact hyperparameters that make it diverge** (see "Adversarial Training: A Debugging Diary" below). In the small-n / high-p bulk setting, whether a method is *reproducible* and *worth the added complexity* matters more than the method itself.
+
+---
+
+## 1. Files
+
+| File | Contents |
+|---|---|
+| `ae_bulk.py` | Data (synthetic demo + real-data hook), preprocessing, plain autoencoder, **latent diagnostics** (linear probe + silhouette), **linear baselines** (PCA / removeBatchEffect), latent visualization |
+| `ae_adv_triplet.py` | Extends `ae_bulk.py` with a **batch discriminator (two-optimizer adversarial)** + **cross-batch triplet loss**, reusing the same diagnostics for a direct comparison |
+
+## 2. Quick start
+
+```bash
+pip install torch scikit-learn numpy matplotlib
+
+python ae_bulk.py          # plain AE + two linear baselines + diagnostics + latent plot
+python ae_adv_triplet.py   # adversarial + triplet version, compared against the plain AE
+```
+
+To use your own data, fill in the `load_real()` stub in `ae_bulk.py`, returning `(X, batch, bio)` — `X` is a log-normalized expression matrix (log1p CPM / VST, restricted to shared genes), `batch` is the cohort id (e.g. 0 = GSE79362, 1 = GSE94438), and `bio` is the biological label (progressor=1 / non-progressor=0, or active / latent, your choice of contrast).
+
+### What you'll see (reproduction)
+
+All seeds are fixed (`SEED = 0`), so results are reproducible.
+
+**`python ae_bulk.py`** prints, in order:
+1. Synthetic data dimensions (400 samples × 2000 genes, cohorts of 220/180, 54/24 progressors — the cohort proportions are deliberately different to create batch × biology confounding);
+2. AE reconstruction MSE over training (epoch 50→200: ~0.65 → 0.56, monotonically decreasing = healthy convergence);
+3. Diagnostics for three representations (see the table in §4.2): plain AE / PCA(raw) / PCA+removeBatchEffect;
+4. A figure `ae_latent.png` (2D projection of the latent, colored by batch on the left, by biology on the right);
+5. A summary that directly shows the linear baseline's batch probe dropping from 1.00 to 0.37.
+
+**`python ae_adv_triplet.py`** prints the training log of the adversarial + triplet version (one line per 75 epochs: `lam_adv` / `rec` / `D_acc` / `tri`) plus the same diagnostics, and saves `ae_adv_latent.png`. Watch two signals: **`D_acc` should fall from ~0.88 to ~0.50** during training (the discriminator is fooled to chance), yet an **independent post-hoc probe may still give `batch_acc` = 1.00** — that contrast is the core trap discussed in §5.
+
+---
+
+## 3. Design principles (from first principles)
+
+The cross-cohort bulk RNA-seq setting is a textbook **small-n / high-p** problem: two cohorts, ~14k shared genes, not many truly independent individuals. Three design constraints follow:
+
+1. **A deep AE overfits easily, and just as easily memorizes batch and treats it as "signal."** So the AE is not the only tool — it's an object to be diagnosed and constrained (built-in HVG selection + L2 regularization + dropout).
+2. **"Observing batch / biological signal" must be quantified, not eyeballed on UMAP/PCA.** 2D projections cluster deceptively. Two metrics are used here:
+   - **linear-probe accuracy** (logistic regression on the latent): lower batch probe = better mixing, higher biology probe = signal retained;
+   - **silhouette**: lower batch silhouette is better, higher biology silhouette is better.
+3. **There must be a linear baseline for comparison.** If the AE latent can't beat a one-line `removeBatchEffect` on batch mixing, then adversarial / triplet is patching the wrong architecture.
+
+---
+
+## 4. Results
+
+### 4.1 A plain AE does NOT remove batch on its own
+
+A naive autoencoder happily encodes batch as the dominant compressible structure in the latent. In the figure below: on the left (colored by cohort) the two cohorts separate almost completely; on the right (colored by biology) the picture is much less clean.
+
+![plain AE latent](ae_latent.png)
+
+### 4.2 Quantified comparison
+
+| Representation | batch probe (↓ better) | bio probe (↑ better) | Training stability | Notes |
+|---|---|---|---|---|
+| Plain AE latent | 1.00 (sil +0.22) | 1.00 | stable | batch encoded verbatim, no correction |
+| PCA(raw) | 1.00 (sil +0.63) | 1.00 | deterministic | no correction, batch dominates |
+| **PCA + removeBatchEffect** | **0.37** (sil +0.00) | 1.00 | deterministic | linear baseline — wins outright here |
+| AE + discriminator + triplet | see diary below | — | hyperparameter-dependent | needs careful tuning, verify with an independent probe |
+
+> Biology is trivially separable in the synthetic data, so the bio probe is 1.00 almost everywhere; on real TB data this column is where the discrimination actually shows up.
+
+**Key takeaway: in this setting, a plain AE loses to a one-line `removeBatchEffect` on batch mixing.** So the batch discriminator and triplet loss are not decoration — they have to earn their place, and they earn it precisely in the three cases where **linear methods fail**:
+- batch effect is **non-linear** (linear regression can't subtract it out);
+- batch is **confounded** with the biological label (subtracting per-batch means also removes biological signal — exactly the TB case, where the progressor fraction differs between cohorts);
+- you want a **reusable encoder** that can project future cohorts into the same latent.
+
+---
+
+## 5. Adversarial Training: A Debugging Diary
+
+Adversarial batch correction is notoriously finicky to tune. Three attempts are recorded here honestly, rather than tuning the demo into a clean win — because "how easily it breaks" is itself a result you need.
+
+### Attempt 1: single-optimizer GRL — `batch_acc` didn't drop (0.997), `tri` was 0 from the start
+
+This isn't a bug; it exposes two problems:
+1. The batch effect in the synthetic data is strong and low-rank, so a weak-λ GRL can't push it out;
+2. Biology is too easily separable in the synthetic data, so the triplet satisfies its margin immediately and does nothing (on real TB data, where biological signal is weak, the triplet actually starts to matter).
+
+So I switched to a more stable, standard recipe: **two-optimizer alternating updates** (train the discriminator D to competence first, then let the encoder fool it), **removed the BatchNorm in the encoder** (it leaks batch statistics), and increased λ_adv.
+
+### Attempt 2: two-optimizer + λ_adv=8 — diverged again (rec blew up to 6.1, batch silhouette 0.97)
+
+`λ_adv=8` + `k_disc=5` let the discriminator always win; the confusion gradient became so large it blew up reconstruction. The triplet oscillated between 0 and 88 because `z` wasn't normalized and the distance scale ran away.
+
+**This is the real face of adversarial training: it walks a min-max tightrope, and one over-heavy hyperparameter makes it diverge.**
+
+Three standard stabilizations: drop λ_adv to 1.5, set `k_disc=1`, add gradient clipping; and compute the triplet on **L2-normalized `z`** (bounding distances to [0,2], the metric-learning convention).
+
+### Attempt 3: after stabilization — training is stable, but it reveals a deeper trap
+
+During training `D_acc` falls from 0.88 to 0.50 (the discriminator is fooled to chance), reconstruction is stable (~0.76), and the triplet now works (bio silhouette 0.59).
+
+**But — note this key phenomenon: the discriminator was fooled to chance during training, yet a fresh logistic-regression probe fit afterwards still gives `batch_acc` = 1.00.**
+
+This isn't a failure; it's a famous and deep trap of adversarial batch correction: **fooling one discriminator ≠ removing batch information from the representation.** The encoder merely found an encoding that *that particular D* can't exploit, while an independent probe recovers batch just fine (a 16-dim latent has plenty of room to hide it). This is exactly why the field moved to stricter metrics like **iLISI / kBET** and to combining adversarial training with explicit distribution matching (MMD).
+
+### Field notes (directly usable lessons)
+
+- **Don't use BatchNorm in the encoder — use LayerNorm.** BN normalizes within a minibatch, so when a minibatch is cohort-imbalanced it re-injects batch statistics into `z` and fights the discriminator — the sneakiest pitfall.
+- **Ramp λ_adv from 0 with a sigmoid** (DANN schedule) so reconstruction stabilizes first; keep `k_disc` at 1–2 with gradient clipping.
+- **L2-normalize `z` before the triplet**, otherwise the distance scale runs away and the loss oscillates.
+- **The convergence criterion is NOT "D_acc dropped to chance" — it's an independent probe + iLISI.** Don't trust the loss curve.
+
+---
+
+## 6. Next steps: how to add the discriminator and triplet
+
+### Batch discriminator
+
+The principle is a min-max between the encoder and a discriminator D. The recommended **two-optimizer** scheme is more controllable than a one-shot GRL:
+- `opt_D` updates only D, classifying batch from `z.detach()`;
+- `opt_G` updates encoder+decoder, pushing D's output toward uniform (batch becomes indistinguishable).
+
+Full implementation in `train_adv()` in `ae_adv_triplet.py`.
+
+### Triplet loss — the heart is "cross-batch positives"
+
+An ordinary triplet only pulls same-class samples together; the step that matters for cross-cohort alignment is: **the anchor's positive is preferentially drawn from the same class in a *different* cohort**. This writes "same biology, different batch → pull together" directly into the objective, which is the actual mechanism for aligning cohorts. See `triplet_loss()`.
+
+Two practical issues:
+- **Progressors are rare → many minibatches contain no positives**, and the triplet silently no-ops. Use **PK-sampling** (guarantee P classes × K samples per minibatch, the batch-hard standard from Hermans et al.) or fall back to online semi-hard.
+- **`z` must be L2-normalized** before computing distances.
+
+### Recommended path (from first principles — not the shortest, but the most robust)
+
+1. **Run the two baselines first**: plain AE and `removeBatchEffect`, quantified with the probe + iLISI/kBET. **If the linear method already mixes batch well without losing biology, stop there** — for cross-cohort reproducibility, simpler is more defensible.
+2. **Only when batch × biology confounding makes the linear method remove signal along with batch** should you reach for supervised alignment. And there, **try an MMD penalty before the adversarial route** — it's deterministic, no min-max tightrope, and far more stable at small n:
+
+```python
+import torch
+
+def mmd_rbf(za, zb, sigmas=(1., 2., 4., 8.)):
+    """Distributional gap between batch a and batch b in the latent; penalize it in the loss."""
+    def k(x, y):
+        d = torch.cdist(x, y) ** 2
+        return sum(torch.exp(-d / (2 * s ** 2)) for s in sigmas)
+    return k(za, za).mean() + k(zb, zb).mean() - 2 * k(za, zb).mean()
+
+# L = recon + lam_trip * triplet + lam_mmd * mmd_rbf(z[batch == 0], z[batch == 1])
+```
+
+MMD + triplet (distribution alignment + biological-structure preservation) is usually more reproducible than adversarial + triplet, and easier to explain to a reviewer. Keep the adversarial route as the heavy weapon for when MMD can't push batch down either.
+
+3. **Fix the evaluation protocol**: an independent logistic probe (batch↓ / bio↑) + scib's iLISI / cLISI + kBET; and split the probe's train/test **by subject, not by sample** — with repeated measures, letting the same person's timepoints straddle train/test inflates apparent "biological decodability."
+
+### Optional: fit the count distribution more faithfully
+
+Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**, modeling raw counts directly (the scVI approach), which respects the mean-variance relationship of bulk counts better.
+
+---
+
+## References
+
+- Ganin & Lempitsky, *Domain-Adversarial Training of Neural Networks* (GRL / DANN)
+- Hermans et al., *In Defense of the Triplet Loss for Person Re-Identification* (batch-hard mining)
+- Luecken et al., *Benchmarking atlas-level data integration* (iLISI / kBET / scIB metrics)
+- Lopez et al., *scVI* (NB likelihood decoder)
+
+---
+---
+
+<a name="中文说明"></a>
+
+**[English](#bulk-transcriptomics-autoencoder-batch-vs-biological-signal-in-latent-space)** | 中文
+
 # Bulk Transcriptomics Autoencoder:Latent Space 中的 Batch 与 Biological Signal
 
 用 PyTorch 建立一个 bulk RNA-seq 的 autoencoder,**量化**观察 latent space 里 batch effect 和生物信号各自占多少,并在此基础上尝试用 **batch discriminator(对抗)** 与 **triplet loss** 做 cross-cohort 对齐。
