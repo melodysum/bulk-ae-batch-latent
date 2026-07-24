@@ -12,5 +12,5 @@ env/
 .pytest_cache/
 
 # expression matrices - too large for git, fetch from curatedTBData
-data/expr/
+data/expr/*.csv.gz
 *.csv.gz
