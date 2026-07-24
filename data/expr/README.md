@@ -48,3 +48,14 @@ GSE94438_counts_csv.gz
 ```
 
 Regenerate with the same R session, writing raw `cnt[keep, ]` instead of `lcpm`.
+
+## GSE107994 (third cohort)
+
+```
+GSE107994_logCPM_csv.gz    16,543 genes x 175 samples
+GSE107994_counts_csv.gz    (for scVI, optional)
+```
+
+UK adult LTBI contacts (Leicester). Used for the discrimination question only
+(section 7.0): 9 progressor donors, 49 non-progressor donors. No continuous
+TimeToTB field. Regenerate with the same R snippet, study = "GSE107994".
