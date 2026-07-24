@@ -25,6 +25,7 @@ Two things make this repo different from most batch-correction code:
 | `src/tbbatch/timeaxis.py` | Parses `TimeToTB` into days across cohorts. Handles unit mismatch, the non-`NA` `"---"` sentinel, and post-diagnosis negative times; returns an explicit `kind` per row rather than coercing. Also donor-level power and within-donor spread (§3.7.1–2). |
 | `src/tbbatch/splits.py` | Leave-one-study-out (outer) and donor-grouped stratified k-fold (inner), plus a batch-balanced minibatch sampler. Every split is asserted before it is returned; a leaking split **raises** rather than quietly scoring. |
 | `scripts/run_audit.py` | One command → `results/design_audit.md`. |
+| `scripts/run_baseline.py` | Signature score vs time-to-diagnosis on real expression: per-cohort correlation, within- vs between-donor split, and Cochran's Q site heterogeneity. → `results/baseline_timeaxis.md` |
 | `data/metadata/` | Sample-level metadata for both cohorts (no expression values), so the audit is reproducible without a Bioconductor install. See its README for provenance. |
 | `tests/test_splits.py` | 10 tests. Three construct leaking splits deliberately and assert the guards fire. |
 
@@ -290,6 +291,62 @@ The methodological residue is the design rule the repo now follows: *a guard tha
 
 ---
 
+## 3B. First results on real expression data
+
+`scripts/run_baseline.py` -> [`results/baseline_timeaxis.md`](results/baseline_timeaxis.md). Uncorrected log-CPM, progressors only, days > 0, one row per donor. Signature definitions taken verbatim from the [sibling DE analysis](https://github.com/melodysum/TB-Whole-Blood-Transcriptomics-GSE79362-GSE94438) so the two repositories cannot silently diverge. Shared gene space after intersection: **15,264**.
+
+A negative rho means the score rises as diagnosis approaches — the direction the signature literature predicts.
+
+### The relationship holds in one cohort and vanishes in the other
+
+| cohort | signature | donors | rho | 95% CI | p |
+|---|---|---|---|---|---|
+| GSE79362 | Zak16 | 33 | **-0.449** | [-0.69, -0.13] | 0.009 |
+| GSE79362 | Eleven_gene | 33 | -0.426 | [-0.67, -0.10] | 0.014 |
+| GSE94438 | Zak16 | 75 | **-0.022** | [-0.25, +0.21] | 0.85 |
+| GSE94438 | Eleven_gene | 75 | -0.025 | [-0.25, +0.21] | 0.85 |
+
+Restricting both cohorts to the [91, 730] day overlap window barely moves either number (-0.423 and -0.022), so **timeline shift (§3.7.3) does not explain the discrepancy.**
+
+The GSE94438 null is not merely underpowered: at 75 donors the confidence interval excludes any association stronger than |rho| = 0.25.
+
+### The within-person contrast is stronger, as §3.7.2 predicted
+
+| cohort | longitudinal donors | within rho | p | between rho | p |
+|---|---|---|---|---|---|
+| GSE79362 | 19 | **-0.493** | **0.00018** | -0.449 | 0.009 |
+| GSE94438 | **0** | n/a | n/a | -0.022 | 0.85 |
+
+Using each donor as their own control gives a stronger association from *fewer* people, and a p-value two orders of magnitude smaller. GSE94438 contributes zero longitudinal donors — its repeats are same-timepoint replicates (§3.7.2), so this analysis is unavailable there by construction.
+
+### The GSE94438 null is sites cancelling, not absence of signal
+
+| site | donors | rho | p |
+|---|---|---|---|
+| Ethiopia | 11 | **-0.563** | 0.071 |
+| The Gambia | 25 | **-0.279** | 0.18 |
+| South Africa | 39 | **+0.196** | 0.23 |
+| pooled | 75 | -0.022 | 0.85 |
+
+Cochran's Q = 6.21, df = 2, **p = 0.045**, **I² = 68%**.
+
+No single site reaches significance on its own, but they differ by more than sampling noise, and the largest site points the *opposite way*. The pooled near-zero is a cancellation.
+
+**This is the finding the project was missing.** It converts the vague goal "does batch correction help?" into a quantitative target:
+
+> GSE94438's signature-time association is destroyed by between-site heterogeneity. Does site correction recover it, and does the recovered value approach the GSE79362 estimate of -0.45?
+
+Success and failure are both legible in advance. And it sharpens §3.6: site here is not additive noise — it **inverts the sign of a biological relationship**, which is a far more demanding test than improving a mixing metric.
+
+### Caveats
+
+- Site strata are small (11–39 donors) and the decomposition was not pre-registered. Q = 6.21 at p = 0.045 is suggestive, not decisive; it justifies the next experiment rather than concluding one.
+- `FCGR1B` is absent from the GSE94438 matrix, so its Zak16 and Eleven_gene scores use one gene fewer. Same limitation as the sibling analysis.
+- The shared gene count (15,264) exceeds the sibling repo's 14,128 because filtering thresholds differ (`>= 20 samples with CPM > 1` here vs a group-size rule there). Neither is wrong; they are not interchangeable.
+- RISK4 is a ratio rather than a mean and behaves differently (+0.281 in GSE79362, wrong direction, n.s.). Not pursued further here.
+
+---
+
 ## 4. Design principles (from first principles)
 
 The cross-cohort bulk RNA-seq setting is a textbook **small-n / high-p** problem: two cohorts, ~14k shared genes, and — per §3.2 — only 478 truly independent individuals behind 783 samples. Three design constraints follow:
@@ -425,6 +482,8 @@ Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**
 | LOSO + donor-grouped splitters, assertion-enforced | done |
 | Test suite (leakage & parsing guards verified to fire) | done — 21/21 |
 | `Progression` label axis | **resolved: redundant** — no shared supervised axis exists (§3.3) |
+| Count matrices exported and intersected (15,264 shared genes) | done |
+| **Baseline: signature score vs time-to-diagnosis (§3B)** | **done** |
 | Count matrices wired to `load_real()` | pending |
 | Baselines (uncorrected / ComBat / PCA / AE) under LOSO | pending |
 | Adversarial + triplet on real data, with ablations | pending |
@@ -475,6 +534,7 @@ Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**
 | `src/tbbatch/timeaxis.py` | 把 `TimeToTB` 跨队列解析为天。处理单位不一致、非 `NA` 的 `"---"` 缺失标记、以及确诊后的负数时间;每行显式返回 `kind`,不做强制转换。另含 donor 级功效计算与个体内跨度(3.7.1–2 节)。 |
 | `src/tbbatch/splits.py` | Leave-one-study-out(外层)+ donor-grouped 分层 k-fold(内层),另含 batch-balanced minibatch 采样器。每个 split 返回前都跑断言;**泄漏就 raise**,而不是默默给你一个好看的数字。 |
 | `scripts/run_audit.py` | 一条命令 → `results/design_audit.md`。 |
+| `scripts/run_baseline.py` | 真实表达上的 signature 得分 vs 到确诊时间:分队列相关、个体内/个体间分解、站点异质性 Cochran's Q。→ `results/baseline_timeaxis.md` |
 | `data/metadata/` | 两个队列的样本级 metadata(**不含表达值**),使审计无需安装 Bioconductor 即可复现。来源见其 README。 |
 | `tests/test_splits.py` | 10 个测试。其中三个**故意构造泄漏的 split**,验证守卫真的会拦。 |
 
@@ -740,6 +800,62 @@ GSE94438 的样本系统性地**离确诊更远**——中位数 426 天对 274 
 
 ---
 
+## 3B. 真实表达数据上的第一批结果
+
+`scripts/run_baseline.py` → [`results/baseline_timeaxis.md`](results/baseline_timeaxis.md)。未校正 log-CPM,仅 progressor,days > 0,每个 donor 一行。signature 定义直接取自[姊妹 DE 分析仓库](https://github.com/melodysum/TB-Whole-Blood-Transcriptomics-GSE79362-GSE94438),避免两个仓库悄悄分叉。取交集后的共享基因空间:**15,264**。
+
+rho 为负表示得分随确诊临近而升高——正是 signature 文献预测的方向。
+
+### 关系在一个队列成立,在另一个队列消失
+
+| 队列 | signature | donor | rho | 95% CI | p |
+|---|---|---|---|---|---|
+| GSE79362 | Zak16 | 33 | **-0.449** | [-0.69, -0.13] | 0.009 |
+| GSE79362 | Eleven_gene | 33 | -0.426 | [-0.67, -0.10] | 0.014 |
+| GSE94438 | Zak16 | 75 | **-0.022** | [-0.25, +0.21] | 0.85 |
+| GSE94438 | Eleven_gene | 75 | -0.025 | [-0.25, +0.21] | 0.85 |
+
+把两个队列都限制到 [91, 730] 天重叠窗口后,两个数字几乎不动(-0.423 与 -0.022),因此**时间轴漂移(3.7.3 节)解释不了这个差异。**
+
+GSE94438 的零结果也不只是功效不足:在 75 个 donor 下,置信区间排除了任何强于 |rho| = 0.25 的关联。
+
+### 个体内对比更强,与 3.7.2 节的预测一致
+
+| 队列 | 纵向 donor | 个体内 rho | p | 个体间 rho | p |
+|---|---|---|---|---|---|
+| GSE79362 | 19 | **-0.493** | **0.00018** | -0.449 | 0.009 |
+| GSE94438 | **0** | 不可得 | 不可得 | -0.022 | 0.85 |
+
+让每个人做自己的对照,用**更少**的人得到了**更强**的关联,p 值小两个数量级。GSE94438 贡献 0 个纵向 donor——它的重复是单时间点复制(3.7.2 节),所以这项分析在那里从构造上就不可得。
+
+### GSE94438 的零结果是站点相互抵消,不是没有信号
+
+| 站点 | donor | rho | p |
+|---|---|---|---|
+| Ethiopia | 11 | **-0.563** | 0.071 |
+| The Gambia | 25 | **-0.279** | 0.18 |
+| South Africa | 39 | **+0.196** | 0.23 |
+| 合并 | 75 | -0.022 | 0.85 |
+
+Cochran's Q = 6.21,df = 2,**p = 0.045**,**I² = 68%**。
+
+单个站点都没达到显著,但它们的差异超出抽样噪声可解释的范围,而且**最大的站点指向相反方向**。合并后的近零值是一次抵消。
+
+**这正是这个项目此前缺的那个发现。** 它把「batch correction 有没有用」这个含糊目标,换成了一个定量靶标:
+
+> GSE94438 的 signature–时间关联被站点间异质性摧毁了。站点校正能否把它恢复?恢复后的值能否接近 GSE79362 的 -0.45?
+
+成功和失败都事先可读。而且它使 3.6 节更锋利:这里的站点不是加性噪声,它**反转了一个生物学关系的符号**——这比改善某个 mixing 指标是严苛得多的检验。
+
+### 需要声明的限制
+
+- 站点分层样本小(11–39 个 donor),且该分解不是预注册的。Q = 6.21、p = 0.045 是提示性的,不是定论;它证成的是下一个实验,而不是一个结论。
+- `FCGR1B` 不在 GSE94438 矩阵中,因此该队列的 Zak16 与 Eleven_gene 少用一个基因。与姊妹分析同一限制。
+- 共享基因数(15,264)高于姊妹仓库的 14,128,因为过滤阈值不同(这里是 `>= 20 个样本 CPM > 1`,那边用的是组大小规则)。两者都不算错,但不可互换。
+- RISK4 是比值而非均值,行为不同(GSE79362 中 +0.281,方向相反,不显著)。此处不再深入。
+
+---
+
 ## 四、设计理念(第一性原理)
 
 bulk RNA-seq 跨队列场景是典型的 **small-n / high-p**:两个 cohort、~14k 共享基因,而且按 3.2 节,783 个样本背后只有 478 个真正独立的个体。这决定了三条设计约束:
@@ -875,6 +991,8 @@ MMD + triplet(分布对齐 + 生物结构保持)通常比对抗 + triplet 更容
 | LOSO + donor-grouped 划分器,断言强制 | 完成 |
 | 测试套件(已验证泄漏与解析守卫会触发) | 完成 — 21/21 |
 | `Progression` label 轴 | **已查清:冗余** — 不存在共享有监督轴(3.3 节) |
+| Count 矩阵已导出并取交集(15,264 共享基因) | 完成 |
+| **Baseline:signature 得分 vs 到确诊时间(3B 节)** | **完成** |
 | Count 矩阵接入 `load_real()` | 待办 |
 | LOSO 下的 baseline(未校正 / ComBat / PCA / AE) | 待办 |
 | 真实数据上的对抗 + triplet,含 ablation | 待办 |
