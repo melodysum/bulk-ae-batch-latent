@@ -1,0 +1,113 @@
+# Study registry.
+#
+# One block per cohort. The adapter layer reads ONLY this file, so adding a
+# fifth cohort means adding a block here, not editing code.
+#
+# `label_axis` is the important field. It records WHICH biological contrast a
+# study can support. Studies are only poolable for supervised transfer if they
+# agree on the axis AND on the class definitions underneath it.
+
+studies:
+
+  GSE79362:
+    cohort: "ACS adolescent cohort (Zak et al. 2016)"
+    metadata_csv: "data/metadata/GSE79362_sample_qc.csv"
+    columns:
+      sample_id: "sample_id"
+      donor_id: "PatientID"
+      site: "GeographicalRegion"
+      age: "Age"
+      sex: "Gender"
+      lib_size: "library_size"
+    label_axes:
+      tbstatus:
+        column: "TBStatus"
+        positive: ["PTB"]
+        negative: ["LTBI"]          # <- latent infection, NOT unexposed
+        control_definition: "LTBI"
+      progression:
+        column: "Progression"
+        positive: ["Positive"]
+        negative: ["Negative"]
+        control_definition: "LTBI"    # <- NOT "non-progressor": the negatives
+                                      #    here are the same 245 LTBI subjects
+        status: "REDUNDANT_WITH_TBSTATUS"
+    longitudinal: true
+    timepoint_column: "MeasurementTime"
+    time_axis:
+      column: "TimeToTB"
+      unit: "days"                    # values like "642 Day(s)"
+      sentinels: ["---"]              # NOT NA: is.na() reports FALSE.
+                                      # All 166 "---" rows are non-progressors;
+                                      # true missingness is 257/355, not 91/355.
+      has_censoring_times: false      # verified: no non-progressor has a value
+      status: "READY_PROGRESSOR_ONLY"
+
+  GSE94438:
+    cohort: "GC6-74 household contacts (Suliman et al. 2018)"
+    metadata_csv: "data/metadata/GSE94438_sample_qc.csv"
+    columns:
+      sample_id: "sample_id"
+      donor_id: "PatientID"
+      site: "GeographicalRegion"
+      age: "Age"
+      sex: "Gender"
+      lib_size: "library_size"
+    label_axes:
+      tbstatus:
+        column: "TBStatus"
+        positive: ["PTB"]
+        negative: ["Control"]        # <- exposed household contact, NOT LTBI
+        control_definition: "household contact"
+      progression:
+        column: "Progression"
+        positive: ["Positive"]
+        negative: ["Negative"]
+        control_definition: "household contact"   # <- same 327 contacts,
+                                                  #    merely renamed
+        status: "REDUNDANT_WITH_TBSTATUS"
+    longitudinal: true
+    timepoint_column: "TimeFromExposure"
+    time_axis:
+      column: "TimeToTB"
+      unit: "months"                  # values like "22 month(s)"
+      sentinels: []
+      has_censoring_times: false      # only the 101 progressors carry a time
+      status: "READY_PROGRESSOR_ONLY"
+
+# Which axis is usable for which experiment.
+#
+# tbstatus is NOT usable for pooled supervised transfer: the two studies have
+# disjoint negative classes (LTBI vs household contact), so `study` perfectly
+# determines the control definition. See audit output.
+experiments:
+  # Verified 2026-07: `Progression` is exactly collinear with `TBStatus` inside
+  # BOTH cohorts (off-diagonal counts all zero). It is a relabelling, not a new
+  # axis, and it renames two DIFFERENT control populations to the same string.
+  # No shared supervised axis exists for these two cohorts.
+  supervised_transfer:
+    axis: null
+    studies: ["GSE79362", "GSE94438"]
+    status: "UNAVAILABLE_NO_SHARED_AXIS"
+  representation_only:
+    axis: null
+    studies: ["GSE79362", "GSE94438"]
+    status: "READY"
+
+  # Restricting to progressors excludes the control group entirely, and with it
+  # the disjoint-control confound. "Days from sampling to TB diagnosis" means
+  # the same thing in both cohorts; "control" does not. Units are harmonised by
+  # tbbatch.timeaxis. n ~ 199 before removing sentinels and post-diagnosis
+  # (negative) times.
+  progressor_time_to_diagnosis:
+    axis: "time_axis"
+    studies: ["GSE79362", "GSE94438"]
+    restrict_to: "progressors"
+    status: "READY"
+
+  # Pooled survival is NOT available: NEITHER cohort records censoring times.
+  # Both populate TimeToTB for progressors only, so there is no risk set.
+  pooled_survival:
+    axis: "time_axis"
+    studies: ["GSE79362", "GSE94438"]
+    status: "UNAVAILABLE_NO_CENSORING_TIMES_IN_EITHER_COHORT"

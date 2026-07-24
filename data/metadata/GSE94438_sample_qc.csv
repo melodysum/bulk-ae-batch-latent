@@ -1,0 +1,429 @@
+"sample_id","TBStatus","GeographicalRegion","PatientID","Age","Gender","library_size","low_lib"
+"GSM2475317","PTB","The Gambia","08/G606",21,"Female",39713913,FALSE
+"GSM2475318","PTB","The Gambia","08/G433",26,"Female",32111491.5,FALSE
+"GSM2475319","Control","The Gambia","07/G277",20,"Female",42079868,FALSE
+"GSM2475320","Control","The Gambia","08/G810",21,"Female",39666465.5,FALSE
+"GSM2475321","Control","The Gambia","08/G715",20,"Female",41576979,FALSE
+"GSM2475322","Control","The Gambia","08/G596",20,"Female",36952581,FALSE
+"GSM2475323","PTB","The Gambia","10/G407",22,"Female",40833298.5,FALSE
+"GSM2475324","Control","The Gambia","09/G390",21,"Female",37382121,FALSE
+"GSM2475325","Control","The Gambia","09/G377",23,"Female",44008598,FALSE
+"GSM2475326","Control","The Gambia","08/G797",28,"Female",40762885,FALSE
+"GSM2475327","Control","The Gambia","08/G324",35,"Female",35647388,FALSE
+"GSM2475328","PTB","The Gambia","08/G433",26,"Female",34684706.5,FALSE
+"GSM2475329","Control","The Gambia","08/G324",35,"Female",43355753,FALSE
+"GSM2475330","PTB","The Gambia","08/G433",26,"Female",38358327,FALSE
+"GSM2475331","Control","The Gambia","08/G893",29,"Female",39679571,FALSE
+"GSM2475332","Control","The Gambia","08/G893",29,"Female",34137730,FALSE
+"GSM2475333","Control","The Gambia","09/G258",29,"Female",35936645.5,FALSE
+"GSM2475334","Control","The Gambia","08/G797",28,"Female",29187637.5,FALSE
+"GSM2475335","Control","The Gambia","09/G196",19,"Male",41504068.5,FALSE
+"GSM2475336","Control","The Gambia","08/G324",35,"Female",42085865,FALSE
+"GSM2475337","PTB","The Gambia","08/G814",20,"Female",40354726.5,FALSE
+"GSM2475338","Control","The Gambia","07/G328",25,"Female",34368679,FALSE
+"GSM2475339","PTB","The Gambia","10/G369",22,"Male",37286363.5,FALSE
+"GSM2475340","Control","The Gambia","08/G434",21,"Male",30571865,FALSE
+"GSM2475341","Control","The Gambia","09/G187",21,"Male",38181751,FALSE
+"GSM2475342","Control","The Gambia","09/G258",29,"Female",33602817,FALSE
+"GSM2475343","Control","The Gambia","07/G274",17,"Male",35108157,FALSE
+"GSM2475344","Control","The Gambia","09/G431",16,"Male",35306849.5,FALSE
+"GSM2475345","PTB","The Gambia","10/G261",38,"Female",38826791.5,FALSE
+"GSM2475346","Control","The Gambia","09/G449",16,"Female",29707394,FALSE
+"GSM2475347","Control","The Gambia","09/G450",16,"Female",32637114,FALSE
+"GSM2475348","Control","The Gambia","09/G112",39,"Female",30313085.5,FALSE
+"GSM2475349","Control","The Gambia","09/G113",39,"Female",36723768.5,FALSE
+"GSM2475350","Control","The Gambia","09/G384",40,"Female",30628722.5,FALSE
+"GSM2475351","Control","The Gambia","08/G434",21,"Male",31570438.5,FALSE
+"GSM2475352","PTB","The Gambia","09/G280",32,"Female",28619685,FALSE
+"GSM2475353","Control","The Gambia","09/G143",25,"Female",36368117.5,FALSE
+"GSM2475354","Control","The Gambia","09/G169",18,"Male",36358477.5,FALSE
+"GSM2475355","Control","The Gambia","09/G162",30,"Male",38609893.5,FALSE
+"GSM2475356","Control","The Gambia","08/G372",36,"Female",33782035,FALSE
+"GSM2475357","Control","The Gambia","09/G106",18,"Male",34771762.5,FALSE
+"GSM2475358","PTB","The Gambia","10/G369",22,"Male",33607628,FALSE
+"GSM2475359","Control","The Gambia","09/G455",45,"Female",23754016,FALSE
+"GSM2475360","Control","The Gambia","08/G196",17,"Male",20131389.5,FALSE
+"GSM2475361","Control","The Gambia","07/G368",15,"Male",22946927.5,FALSE
+"GSM2475362","Control","The Gambia","08/G131",22,"Female",19559581.5,FALSE
+"GSM2475363","Control","The Gambia","08/G782",18,"Male",40770124,FALSE
+"GSM2475364","PTB","The Gambia","08/G800",20,"Male",43384416,FALSE
+"GSM2475365","Control","The Gambia","08/G788",18,"Male",41967897,FALSE
+"GSM2475366","PTB","The Gambia","08/G494",30,"Female",38875299,FALSE
+"GSM2475367","Control","The Gambia","08/G415",32,"Female",38586630,FALSE
+"GSM2475368","Control","The Gambia","08/G141",19,"Male",35387022,FALSE
+"GSM2475369","PTB","The Gambia","08/G493",37,"Female",39830357.5,FALSE
+"GSM2475370","Control","The Gambia","08/G643",22,"Female",37452600,FALSE
+"GSM2475371","Control","The Gambia","08/G701",28,"Female",40978948,FALSE
+"GSM2475372","Control","The Gambia","08/G343",47,"Female",33665581,FALSE
+"GSM2475373","Control","The Gambia","08/G726",48,"Female",37480192,FALSE
+"GSM2475374","Control","The Gambia","08/G714",44,"Female",35079146,FALSE
+"GSM2475375","Control","The Gambia","07/G189",22,"Female",35689015,FALSE
+"GSM2475376","PTB","The Gambia","08/G423",21,"Female",35673451.5,FALSE
+"GSM2475377","Control","The Gambia","08/G424",26,"Female",34796485.5,FALSE
+"GSM2475378","PTB","The Gambia","08/G260",37,"Female",38232823.5,FALSE
+"GSM2475379","Control","The Gambia","08/G703",60,"Female",40599867.5,FALSE
+"GSM2475380","Control","The Gambia","08/G541",18,"Female",35986433.5,FALSE
+"GSM2475381","PTB","The Gambia","08/G260",37,"Female",32038080.5,FALSE
+"GSM2475382","Control","The Gambia","08/G333",51,"Female",30822429.5,FALSE
+"GSM2475383","Control","The Gambia","08/G695",55,"Female",33137368.5,FALSE
+"GSM2475384","Control","The Gambia","09/G476",30,"Female",42274155.5,FALSE
+"GSM2475385","Control","The Gambia","09/G397",35,"Female",35887369.5,FALSE
+"GSM2475386","Control","The Gambia","07/G370",17,"Male",34769238.5,FALSE
+"GSM2475387","Control","The Gambia","08/G196",17,"Male",19258980.5,FALSE
+"GSM2475388","Control","The Gambia","07/G368",15,"Male",21787688,FALSE
+"GSM2475389","Control","The Gambia","08/G131",22,"Female",18522577,FALSE
+"GSM2475390","Control","The Gambia","09/G455",45,"Female",22629020.5,FALSE
+"GSM2475391","Control","South Africa","5362",39,"Male",44168732.5,FALSE
+"GSM2475392","PTB","South Africa","2123",53,"Male",42312253.5,FALSE
+"GSM2475393","Control","South Africa","3005",23,"Male",44127388.5,FALSE
+"GSM2475394","PTB","South Africa","2129",25,"Male",45783926,FALSE
+"GSM2475395","Control","South Africa","2688",21,"Male",41868072,FALSE
+"GSM2475396","Control","South Africa","461",18,"Female",38797116,FALSE
+"GSM2475397","Control","South Africa","460",24,"Female",46638111.5,FALSE
+"GSM2475398","PTB","South Africa","507",24,"Female",35505700,FALSE
+"GSM2475399","Control","South Africa","2993",25,"Male",44129129.5,FALSE
+"GSM2475400","Control","South Africa","5442",35,"Male",45903240,FALSE
+"GSM2475401","Control","South Africa","657",21,"Female",46555846,FALSE
+"GSM2475402","Control","South Africa","5357",15,"Female",23539699,FALSE
+"GSM2475403","PTB","South Africa","5662",17,"Female",25371504.5,FALSE
+"GSM2475404","Control","South Africa","1075",19,"Female",45962882.5,FALSE
+"GSM2475405","Control","South Africa","2133",30,"Male",41135371,FALSE
+"GSM2475406","PTB","South Africa","3011",27,"Male",44465903,FALSE
+"GSM2475407","Control","South Africa","1056",24,"Female",42787236.5,FALSE
+"GSM2475408","PTB","South Africa","650",19,"Female",44699711.5,FALSE
+"GSM2475409","Control","South Africa","925",18,"Female",28691909.5,FALSE
+"GSM2475410","Control","South Africa","1756",19,"Male",43258841,FALSE
+"GSM2475411","Control","South Africa","108",22,"Male",34520808,FALSE
+"GSM2475412","Control","South Africa","380",27,"Male",32941248,FALSE
+"GSM2475413","PTB","South Africa","93",52,"Female",38836176.5,FALSE
+"GSM2475414","Control","South Africa","907",53,"Female",39245351,FALSE
+"GSM2475415","Control","South Africa","752",45,"Female",37939891,FALSE
+"GSM2475416","Control","South Africa","1126",32,"Male",36347038,FALSE
+"GSM2475417","Control","South Africa","758",26,"Male",44136303,FALSE
+"GSM2475418","Control","South Africa","1074",30,"Male",39893584.5,FALSE
+"GSM2475419","Control","South Africa","53",21,"Female",41841581.5,FALSE
+"GSM2475420","Control","South Africa","483",18,"Female",36162630,FALSE
+"GSM2475421","PTB","South Africa","886",27,"Male",44903660,FALSE
+"GSM2475422","Control","South Africa","89",23,"Female",36535918,FALSE
+"GSM2475423","Control","South Africa","290",20,"Female",38314379,FALSE
+"GSM2475424","PTB","South Africa","87",25,"Female",38520034,FALSE
+"GSM2475425","Control","South Africa","353",19,"Female",33303357.5,FALSE
+"GSM2475426","PTB","South Africa","63",19,"Female",37537937.5,FALSE
+"GSM2475427","Control","South Africa","1239",19,"Female",35082867,FALSE
+"GSM2475428","Control","South Africa","6",18,"Male",40522135,FALSE
+"GSM2475429","Control","South Africa","1130",29,"Male",42656312.5,FALSE
+"GSM2475430","Control","South Africa","741",21,"Female",32395771.5,FALSE
+"GSM2475431","Control","South Africa","659",31,"Male",31314406.5,FALSE
+"GSM2475432","PTB","The Gambia","10/G178",26,"Female",43959586.5,FALSE
+"GSM2475433","Control","The Gambia","08/G407",57,"Male",43204890,FALSE
+"GSM2475434","Control","The Gambia","08/G160",18,"Female",36946481.5,FALSE
+"GSM2475435","PTB","The Gambia","08/G367",56,"Male",41892847.5,FALSE
+"GSM2475436","Control","The Gambia","08/G652",51,"Male",42419830,FALSE
+"GSM2475437","Control","The Gambia","08/G587",55,"Male",42329981.5,FALSE
+"GSM2475438","Control","The Gambia","08/G652",51,"Male",40454051,FALSE
+"GSM2475439","PTB","The Gambia","08/G367",56,"Male",41633307,FALSE
+"GSM2475440","Control","The Gambia","09/G179",57,"Male",42557779,FALSE
+"GSM2475441","Control","The Gambia","09/G477",18,"Female",38260392,FALSE
+"GSM2475442","Control","The Gambia","09/G202",18,"Female",41058711,FALSE
+"GSM2475443","Control","The Gambia","07/G419",52,"Male",46147926,FALSE
+"GSM2475444","Control","The Gambia","09/G202",18,"Female",36133254.5,FALSE
+"GSM2475445","PTB","The Gambia","10/G215",20,"Female",37365994.5,FALSE
+"GSM2475446","Control","The Gambia","09/G188",18,"Female",35867437,FALSE
+"GSM2475447","PTB","The Gambia","10/G215",20,"Female",36942556.5,FALSE
+"GSM2475448","Control","The Gambia","09/G188",18,"Female",37243144.5,FALSE
+"GSM2475449","Control","The Gambia","09/G477",18,"Female",36795235.5,FALSE
+"GSM2475450","Control","The Gambia","09/G120",29,"Female",43240281,FALSE
+"GSM2475451","Control","The Gambia","09/G135",26,"Female",41797280.5,FALSE
+"GSM2475452","Control","The Gambia","08/G136",22,"Female",43613645.5,FALSE
+"GSM2475453","PTB","The Gambia","09/G497",22,"Male",43910500.5,FALSE
+"GSM2475454","Control","The Gambia","09/G435",18,"Male",44809804,FALSE
+"GSM2475455","Control","The Gambia","08/G828",18,"Male",37853684,FALSE
+"GSM2475456","Control","The Gambia","08/G143",21,"Male",42328242,FALSE
+"GSM2475457","Control","The Gambia","08/G802",24,"Male",37854579,FALSE
+"GSM2475458","PTB","The Gambia","08/G762",23,"Male",38745442,FALSE
+"GSM2475459","Control","The Gambia","09/G252",28,"Male",40324694.5,FALSE
+"GSM2475460","PTB","The Gambia","08/G762",23,"Male",37360420.5,FALSE
+"GSM2475461","Control","The Gambia","08/G828",18,"Male",34053824,FALSE
+"GSM2475462","Control","The Gambia","08/G143",21,"Male",46268317,FALSE
+"GSM2475463","Control","The Gambia","08/G802",24,"Male",41068854,FALSE
+"GSM2475464","Control","The Gambia","08/G506",19,"Male",38709641,FALSE
+"GSM2475465","Control","The Gambia","08/G496",24,"Male",38739107.5,FALSE
+"GSM2475466","Control","The Gambia","09/G110",24,"Male",35295385,FALSE
+"GSM2475467","Control","The Gambia","08/G506",19,"Male",39155079,FALSE
+"GSM2475468","Control","The Gambia","08/G496",24,"Male",41985748.5,FALSE
+"GSM2475469","PTB","The Gambia","08/G249",22,"Male",38657514,FALSE
+"GSM2475470","Control","The Gambia","09/G110",24,"Male",43141548.5,FALSE
+"GSM2475471","Control","The Gambia","08/G593",22,"Male",39978063,FALSE
+"GSM2475472","PTB","The Gambia","08/G249",22,"Male",42271146.5,FALSE
+"GSM2475473","Control","The Gambia","09/G228",18,"Male",43189069.5,FALSE
+"GSM2475474","PTB","South Africa","1445",15,"Female",36068927.5,FALSE
+"GSM2475475","Control","South Africa","76",25,"Male",46346115.5,FALSE
+"GSM2475476","Control","South Africa","122",19,"Male",36139031.5,FALSE
+"GSM2475477","Control","South Africa","1769",15,"Female",38534938.5,FALSE
+"GSM2475478","Control","South Africa","919",26,"Male",43014991,FALSE
+"GSM2475479","Control","South Africa","2077",16,"Female",43755923,FALSE
+"GSM2475480","Control","South Africa","919",26,"Male",41316397,FALSE
+"GSM2475481","Control","South Africa","890",37,"Female",34325753.5,FALSE
+"GSM2475482","Control","South Africa","1556",27,"Female",33483259,FALSE
+"GSM2475483","Control","South Africa","2856",19,"Male",39649684,FALSE
+"GSM2475484","Control","South Africa","198",15,"Female",36497606,FALSE
+"GSM2475485","Control","South Africa","2102",16,"Female",37549898,FALSE
+"GSM2475486","Control","South Africa","140",17,"Male",30211075,FALSE
+"GSM2475487","PTB","South Africa","149",15,"Male",36207411,FALSE
+"GSM2475488","Control","South Africa","46",15,"Male",30551078,FALSE
+"GSM2475489","Control","South Africa","359",8,"Female",40983734.5,FALSE
+"GSM2475490","Control","South Africa","503",15,"Female",37875293,FALSE
+"GSM2475491","Control","South Africa","96",12,"Male",44902591,FALSE
+"GSM2475492","Control","South Africa","765",42,"Female",36030632,FALSE
+"GSM2475493","Control","South Africa","513",49,"Female",43004070,FALSE
+"GSM2475494","PTB","South Africa","317",31,"Male",34488708,FALSE
+"GSM2475495","PTB","The Gambia","10/G279",21,"Female",38736911.5,FALSE
+"GSM2475496","Control","The Gambia","08/G826",24,"Female",37459968.5,FALSE
+"GSM2475497","PTB","The Gambia","08/G762",23,"Male",41922858,FALSE
+"GSM2475498","Control","The Gambia","08/G154",18,"Female",49029291.5,FALSE
+"GSM2475499","Control","The Gambia","08/G109",22,"Female",43113516,FALSE
+"GSM2475500","Control","The Gambia","09/G252",28,"Male",36767358,FALSE
+"GSM2475501","Control","The Gambia","09/G482",23,"Female",44876998.5,FALSE
+"GSM2475502","Control","The Gambia","09/G401",18,"Female",39943887.5,FALSE
+"GSM2475503","Control","The Gambia","09/G391",23,"Female",42786018.5,FALSE
+"GSM2475504","Control","The Gambia","08/G198",18,"Female",47759894.5,FALSE
+"GSM2475505","PTB","The Gambia","10/G279",21,"Female",45567588,FALSE
+"GSM2475506","PTB","The Gambia","08/G876",20,"Female",38141143,FALSE
+"GSM2475507","Control","The Gambia","09/G482",23,"Female",41378583,FALSE
+"GSM2475508","Control","The Gambia","09/G482",23,"Female",41077207.5,FALSE
+"GSM2475509","Control","The Gambia","09/G391",23,"Female",40446129,FALSE
+"GSM2475510","Control","The Gambia","08/G198",18,"Female",41610803.5,FALSE
+"GSM2475511","PTB","The Gambia","10/G279",21,"Female",48155536.5,FALSE
+"GSM2475512","Control","The Gambia","09/G401",18,"Female",40663361,FALSE
+"GSM2475513","Control","The Gambia","09/G212",21,"Male",36967532,FALSE
+"GSM2475514","Control","The Gambia","09/G162",30,"Male",39781863,FALSE
+"GSM2475515","Control","The Gambia","09/G391",23,"Female",39623209.5,FALSE
+"GSM2475516","Control","South Africa","1072",20,"Male",47079176,FALSE
+"GSM2475517","Control","South Africa","647",17,"Female",41196992.5,FALSE
+"GSM2475518","Control","South Africa","455",19,"Male",40195983,FALSE
+"GSM2475519","Control","South Africa","1222",51,"Male",37763687,FALSE
+"GSM2475520","Control","South Africa","481",46,"Male",36030765.5,FALSE
+"GSM2475521","Control","South Africa","1021",23,"Male",37559801,FALSE
+"GSM2475522","Control","South Africa","1008",27,"Male",34465976,FALSE
+"GSM2475523","PTB","South Africa","938",39,"Male",35986891,FALSE
+"GSM2475524","Control","South Africa","728",48,"Male",45745641.5,FALSE
+"GSM2475525","Control","South Africa","393",25,"Male",40320361.5,FALSE
+"GSM2475526","PTB","South Africa","299",35,"Male",38719772.5,FALSE
+"GSM2475527","Control","South Africa","529",30,"Male",36001668,FALSE
+"GSM2475528","Control","South Africa","529",30,"Male",40474254.5,FALSE
+"GSM2475529","PTB","South Africa","299",35,"Male",40315201,FALSE
+"GSM2475530","Control","South Africa","1008",27,"Male",43529281.5,FALSE
+"GSM2475531","Control","South Africa","100",13,"Female",43285169.5,FALSE
+"GSM2475532","PTB","South Africa","165",17,"Female",42348470,FALSE
+"GSM2475533","Control","South Africa","393",25,"Male",46904240.5,FALSE
+"GSM2475534","Control","South Africa","495",15,"Male",38891999.5,FALSE
+"GSM2475535","Control","South Africa","724",14,"Female",39851493.5,FALSE
+"GSM2475536","PTB","South Africa","375",24,"Male",49769416,FALSE
+"GSM2475537","Control","South Africa","2713",32,"Male",39703248.5,FALSE
+"GSM2475538","Control","South Africa","649",52,"Female",47199928,FALSE
+"GSM2475539","Control","South Africa","124",18,"Female",38311997,FALSE
+"GSM2475540","PTB","South Africa","196",45,"Female",38427700,FALSE
+"GSM2475541","Control","South Africa","465",56,"Female",44487596,FALSE
+"GSM2475542","Control","South Africa","45",23,"Female",44031439,FALSE
+"GSM2475543","Control","South Africa","945",24,"Female",42205292,FALSE
+"GSM2475544","PTB","South Africa","19",21,"Female",43014998,FALSE
+"GSM2475545","PTB","South Africa","878",24,"Female",44544917,FALSE
+"GSM2475546","Control","South Africa","145",20,"Female",44010388.5,FALSE
+"GSM2475547","Control","South Africa","1448",18,"Female",43457949.5,FALSE
+"GSM2475548","Control","South Africa","315",56,"Female",38866525.5,FALSE
+"GSM2475549","Control","South Africa","1007",24,"Female",47264035.5,FALSE
+"GSM2475550","Control","South Africa","447",23,"Female",45092690.5,FALSE
+"GSM2475551","Control","South Africa","355",42,"Female",37830560,FALSE
+"GSM2475552","PTB","South Africa","1371",38,"Female",40716451.5,FALSE
+"GSM2475553","Control","South Africa","3004",53,"Female",44091290,FALSE
+"GSM2475554","PTB","South Africa","5662",17,"Female",23148169.5,FALSE
+"GSM2475555","Control","South Africa","5357",15,"Female",21528517.5,FALSE
+"GSM2475556","Control","South Africa","3237",35,"Male",45297602.5,FALSE
+"GSM2475557","Control","The Gambia","07/G274",17,"Male",37980478.5,FALSE
+"GSM2475558","Control","The Gambia","09/G445",16,"Male",40992089.5,FALSE
+"GSM2475559","Control","The Gambia","08/G654",26,"Female",37287401,FALSE
+"GSM2475560","Control","The Gambia","09/G442",16,"Male",44177890.5,FALSE
+"GSM2475561","PTB","The Gambia","10/G139",17,"Male",38635413,FALSE
+"GSM2475562","Control","The Gambia","07/G370",17,"Male",36875396.5,FALSE
+"GSM2475563","Control","The Gambia","07/G368",15,"Male",37276629,FALSE
+"GSM2475564","PTB","The Gambia","10/G139",17,"Male",40781244.5,FALSE
+"GSM2475565","Control","The Gambia","09/G445",16,"Male",37559138,FALSE
+"GSM2475566","Control","The Gambia","09/G204",49,"Male",33522542.5,FALSE
+"GSM2475567","Control","The Gambia","09/G371",56,"Male",36910227,FALSE
+"GSM2475568","Control","The Gambia","09/G223",52,"Male",45697099.5,FALSE
+"GSM2475569","Control","The Gambia","09/G223",52,"Male",39072193.5,FALSE
+"GSM2475570","PTB","The Gambia","09/G367",56,"Male",40479144,FALSE
+"GSM2475571","PTB","The Gambia","09/G367",56,"Male",30522341.5,FALSE
+"GSM2475572","Control","The Gambia","09/G133",34,"Female",36977403.5,FALSE
+"GSM2475573","Control","The Gambia","09/G204",49,"Male",37513599.5,FALSE
+"GSM2475574","Control","The Gambia","09/G371",56,"Male",35874649.5,FALSE
+"GSM2475575","Control","The Gambia","09/G389",30,"Female",37040316,FALSE
+"GSM2475576","PTB","The Gambia","09/G524",26,"Female",34459908,FALSE
+"GSM2475577","Control","The Gambia","09/G388",29,"Female",34533350,FALSE
+"GSM2475578","Control","South Africa","2700",31,"Male",35198613.5,FALSE
+"GSM2475579","Control","South Africa","134",47,"Female",23992950,FALSE
+"GSM2475580","Control","South Africa","3012",48,"Male",30813035,FALSE
+"GSM2475581","Control","South Africa","1772",38,"Male",29550477,FALSE
+"GSM2475582","PTB","South Africa","1552",45,"Male",35165620,FALSE
+"GSM2475583","Control","South Africa","3012",48,"Male",32820256,FALSE
+"GSM2475584","PTB","South Africa","184",17,"Female",32588094.5,FALSE
+"GSM2475585","Control","South Africa","624",13,"Female",35641760.5,FALSE
+"GSM2475586","Control","South Africa","463",14,"Female",33831325,FALSE
+"GSM2475587","Control","South Africa","1148",37,"Female",19782576.5,FALSE
+"GSM2475588","Control","South Africa","134",47,"Female",19847247.5,FALSE
+"GSM2475589","PTB","South Africa","204",47,"Female",19758496.5,FALSE
+"GSM2475590","Control","South Africa","890",37,"Female",19531270.5,FALSE
+"GSM2475591","Control","South Africa","161",17,"Female",19000510.5,FALSE
+"GSM2475592","Control","South Africa","1148",37,"Female",19725362.5,FALSE
+"GSM2475593","Control","South Africa","134",47,"Female",19740984,FALSE
+"GSM2475594","PTB","South Africa","204",47,"Female",19642238.5,FALSE
+"GSM2475595","Control","South Africa","890",37,"Female",19471512,FALSE
+"GSM2475596","Control","South Africa","161",17,"Female",18902332,FALSE
+"GSM2475597","Control","South Africa","1463",49,"Male",23391101,FALSE
+"GSM2475598","Control","South Africa","3092",40,"Male",24336359,FALSE
+"GSM2475599","Control","South Africa","217",38,"Female",26882153,FALSE
+"GSM2475600","PTB","South Africa","204",47,"Female",21359701,FALSE
+"GSM2475601","Control","South Africa","134",47,"Female",24789524.5,FALSE
+"GSM2475602","Control","South Africa","1463",49,"Male",22656474.5,FALSE
+"GSM2475603","Control","South Africa","3092",40,"Male",23584426,FALSE
+"GSM2475604","Control","South Africa","217",38,"Female",25918656.5,FALSE
+"GSM2475605","PTB","South Africa","204",47,"Female",20727207.5,FALSE
+"GSM2475606","Control","South Africa","2092",59,"Male",37519371,FALSE
+"GSM2475607","Control","South Africa","918",52,"Female",35689772.5,FALSE
+"GSM2475608","Control","The Gambia","09/G476",30,"Female",38315658,FALSE
+"GSM2475609","Control","South Africa","5434",21,"Male",36773222,FALSE
+"GSM2475610","PTB","The Gambia","07/G300",26,"Male",37872996,FALSE
+"GSM2475611","Control","The Gambia","09/G224",35,"Male",38936188.5,FALSE
+"GSM2475612","Control","The Gambia","09/G247",25,"Male",35150615,FALSE
+"GSM2475613","PTB","The Gambia","08/G245",16,"Male",38677904.5,FALSE
+"GSM2475614","Control","The Gambia","07/G351",17,"Male",32415819,FALSE
+"GSM2475615","Control","The Gambia","07/G354",37,"Male",37259648.5,FALSE
+"GSM2475616","Control","The Gambia","07/G351",17,"Male",33133999.5,FALSE
+"GSM2475617","Control","The Gambia","08/G400",15,"Male",34908985.5,FALSE
+"GSM2475618","Control","The Gambia","08/G613",15,"Male",34243745.5,FALSE
+"GSM2475619","PTB","The Gambia","08/G245",16,"Male",34408622.5,FALSE
+"GSM2475620","Control","The Gambia","08/G400",15,"Male",34934956.5,FALSE
+"GSM2475621","Control","The Gambia","08/G613",15,"Male",36011245.5,FALSE
+"GSM2475622","Control","South Africa","5674",12,"Female",37677640,FALSE
+"GSM2475623","Control","South Africa","301",13,"Female",36053183,FALSE
+"GSM2475624","PTB","South Africa","6313",38,"Male",37392224.5,FALSE
+"GSM2475625","Control","The Gambia","09/G455",45,"Female",33631566,FALSE
+"GSM2475626","Control","The Gambia","08/G703",60,"Female",30258712,FALSE
+"GSM2475627","Control","South Africa","5572",21,"Female",37446443.5,FALSE
+"GSM2475628","Control","South Africa","2274",11,"Female",40399780,FALSE
+"GSM2475629","Control","South Africa","1457",17,"Female",53438202,FALSE
+"GSM2475630","Control","South Africa","2082",30,"Female",49396901,FALSE
+"GSM2475631","Control","South Africa","2097",14,"Female",54229355.5,FALSE
+"GSM2475632","Control","South Africa","2102",16,"Female",51533983,FALSE
+"GSM2475633","PTB","South Africa","2864",16,"Female",36996545,FALSE
+"GSM2475634","Control","South Africa","1769",15,"Female",47578415.5,FALSE
+"GSM2475635","PTB","South Africa","2864",16,"Female",48128190.5,FALSE
+"GSM2475636","Control","South Africa","2274",11,"Female",57488503,FALSE
+"GSM2475637","Control","South Africa","2857",24,"Female",41348155,FALSE
+"GSM2475638","PTB","South Africa","3099",22,"Female",50425485,FALSE
+"GSM2475639","Control","South Africa","1588",22,"Female",52396113.5,FALSE
+"GSM2475640","PTB","South Africa","2693",24,"Female",52594959.5,FALSE
+"GSM2475641","Control","South Africa","1594",23,"Female",49874573.5,FALSE
+"GSM2475642","Control","South Africa","3106",19,"Female",53524128.5,FALSE
+"GSM2475643","Control","South Africa","3110",10,"Female",44712207,FALSE
+"GSM2475644","Control","South Africa","1778",24,"Female",42503622,FALSE
+"GSM2475645","Control","South Africa","3007",23,"Female",46127985.5,FALSE
+"GSM2475646","Control","South Africa","2228",13,"Female",48251056,FALSE
+"GSM2475647","PTB","South Africa","3102",14,"Female",48340945,FALSE
+"GSM2475648","Control","South Africa","2097",14,"Female",49053767,FALSE
+"GSM2475649","Control","South Africa","70",45,"Female",37695833,FALSE
+"GSM2475650","Control","South Africa","671",55,"Female",38818377.5,FALSE
+"GSM2475651","Control","South Africa","1241",24,"Male",41447516,FALSE
+"GSM2475652","Control","South Africa","1023",24,"Male",40459619.5,FALSE
+"GSM2475653","Control","South Africa","468",37,"Female",40117172.5,FALSE
+"GSM2475654","Control","South Africa","1064",51,"Female",42775150.5,FALSE
+"GSM2475655","Control","South Africa","405",53,"Male",39335229,FALSE
+"GSM2475656","Control","South Africa","5551",33,"Male",43786632.5,FALSE
+"GSM2475657","PTB","South Africa","1051",43,"Male",36920010.5,FALSE
+"GSM2475658","PTB","South Africa","1590",47,"Female",37011130,FALSE
+"GSM2475659","Control","South Africa","2858",48,"Female",33649233,FALSE
+"GSM2475660","Control","South Africa","357",42,"Female",38822109,FALSE
+"GSM2475661","PTB","South Africa","479",57,"Female",38410767,FALSE
+"GSM2475662","Control","South Africa","621",37,"Female",29168855,FALSE
+"GSM2475663","Control","South Africa","5357",15,"Female",35790376.5,FALSE
+"GSM2475664","Control","South Africa","3094",15,"Female",41878953,FALSE
+"GSM2475665","Control","South Africa","1019",47,"Female",41849131,FALSE
+"GSM2475666","Control","South Africa","3094",15,"Female",38352174,FALSE
+"GSM2475667","PTB","South Africa","5662",17,"Female",42483500.5,FALSE
+"GSM2475668","Control","South Africa","5677",14,"Female",38528818.5,FALSE
+"GSM2475669","Control","South Africa","2861",52,"Female",38198601,FALSE
+"GSM2475670","Control","South Africa","656",36,"Male",37883891,FALSE
+"GSM2475671","Control","South Africa","636",32,"Male",35733973,FALSE
+"GSM2475672","Control","South Africa","1750",55,"Female",36211075,FALSE
+"GSM2475673","PTB","South Africa","2",13,"Male",33607816.5,FALSE
+"GSM2475674","Control","South Africa","497",26,"Male",37197268.5,FALSE
+"GSM2475675","PTB","South Africa","450",26,"Male",35485447.5,FALSE
+"GSM2475676","Control","South Africa","374",11,"Male",33187490.5,FALSE
+"GSM2475677","Control","South Africa","496",16,"Male",39556128,FALSE
+"GSM2475678","Control","South Africa","940",12,"Male",36038882,FALSE
+"GSM2475679","Control","South Africa","1460",31,"Female",40012551.5,FALSE
+"GSM2475680","Control","South Africa","1587",22,"Male",42470710,FALSE
+"GSM2475681","PTB","South Africa","2847",30,"Female",44779147.5,FALSE
+"GSM2475682","Control","South Africa","5554",19,"Male",44400099,FALSE
+"GSM2475683","Control","South Africa","6565",22,"Male",40609621,FALSE
+"GSM2475684","Control","South Africa","5674",12,"Female",43700455,FALSE
+"GSM2475685","Control","South Africa","6074",11,"Female",36729912,FALSE
+"GSM2475686","Control","South Africa","5918",13,"Female",42464630.5,FALSE
+"GSM2475687","Control","South Africa","498",48,"Female",39237780,FALSE
+"GSM2475688","Control","South Africa","5326",22,"Female",40275930.5,FALSE
+"GSM2475689","PTB","South Africa","6665",14,"Female",36708044.5,FALSE
+"GSM2475690","Control","South Africa","6302",12,"Female",36774148,FALSE
+"GSM2475691","Control","South Africa","5359",10,"Female",40376797,FALSE
+"GSM2475692","PTB","South Africa","6675",19,"Female",42118164.5,FALSE
+"GSM2475693","Control","South Africa","6686",21,"Female",38751107,FALSE
+"GSM2475694","PTB","South Africa","6907",22,"Male",39470546.5,FALSE
+"GSM2475695","Control","South Africa","2994",21,"Male",37273259.5,FALSE
+"GSM2475696","Control","South Africa","5661",22,"Male",36048283,FALSE
+"GSM2475697","PTB","South Africa","769",45,"Female",36641569.5,FALSE
+"GSM2475698","Control","South Africa","1243",37,"Female",39323313,FALSE
+"GSM2475699","Control","South Africa","1755",31,"Female",38835637,FALSE
+"GSM2475700","Control","Ethiopia","ARHHC35",22,"Male",41311680,FALSE
+"GSM2475701","PTB","Ethiopia","KHHC151",21,"Female",36676692.5,FALSE
+"GSM2475702","PTB","Ethiopia","DZHHC78",19,"Male",40389260.5,FALSE
+"GSM2475703","PTB","Ethiopia","ARHHC63",20,"Female",38805273.5,FALSE
+"GSM2475707","Control","Ethiopia","MOHHC21",22,"Female",35824014.5,FALSE
+"GSM2475708","PTB","Ethiopia","DZHHC78",19,"Male",31754143.5,FALSE
+"GSM2475709","Control","Ethiopia","KHHC87",40,"Female",45506007.5,FALSE
+"GSM2475710","Control","Ethiopia","ARHHC45",30,"Female",48896751,FALSE
+"GSM2475711","Control","Ethiopia","ARHHC45",30,"Female",36216877.5,FALSE
+"GSM2475712","Control","Ethiopia","DZHHC68",20,"Male",38028275.5,FALSE
+"GSM2475713","PTB","Ethiopia","KHHC68",35,"Female",39495122.5,FALSE
+"GSM2475714","Control","Ethiopia","KHHC17",22,"Male",40858141,FALSE
+"GSM2475715","Control","Ethiopia","ARHHC46",18,"Male",39896033,FALSE
+"GSM2475716","PTB","Ethiopia","KHHC121",18,"Female",46773776,FALSE
+"GSM2475717","Control","Ethiopia","KHHC47",42,"Female",36191148.5,FALSE
+"GSM2475718","PTB","Ethiopia","KHHC151",21,"Female",34849628,FALSE
+"GSM2475719","PTB","Ethiopia","KHHC68",35,"Female",41325263,FALSE
+"GSM2475720","PTB","Ethiopia","ARHHC63",20,"Female",42921104,FALSE
+"GSM2475721","Control","Ethiopia","W23HHC113",21,"Male",49990059.5,FALSE
+"GSM2475723","Control","Ethiopia","DZHHC70",42,"Female",38497713.5,FALSE
+"GSM2475724","Control","Ethiopia","DZHHC69",35,"Female",38388326.5,FALSE
+"GSM2475725","PTB","Ethiopia","W23HHC132",18,"Male",32873336,FALSE
+"GSM2475726","Control","Ethiopia","DZHHC26",32,"Female",35110642.5,FALSE
+"GSM2475727","Control","Ethiopia","DZHHC69",35,"Female",39909033.5,FALSE
+"GSM2475728","Control","Ethiopia","DZHHC70",42,"Female",38377393.5,FALSE
+"GSM2475729","PTB","Ethiopia","KFHHC21",35,"Female",31410759.5,FALSE
+"GSM2475730","Control","Ethiopia","KHHC05",30,"Female",42820673,FALSE
+"GSM2475731","PTB","Ethiopia","KHHC26",25,"Male",41195289.5,FALSE
+"GSM2475732","PTB","Ethiopia","KHHC26",25,"Male",42827880.5,FALSE
+"GSM2475733","PTB","Ethiopia","KHHC78",26,"Female",40863273.5,FALSE
+"GSM2475734","Control","Ethiopia","LDHHC09",50,"Female",43289694,FALSE
+"GSM2475735","PTB","Ethiopia","MOHHC04",30,"Female",37207701.5,FALSE
+"GSM2475736","Control","Ethiopia","MOHHC21",22,"Female",40489630,FALSE
+"GSM2475737","Control","Ethiopia","TEKHHC08",19,"Male",39688289.5,FALSE
+"GSM2475738","Control","Ethiopia","TEKHHC105",44,"Female",39264104.5,FALSE
+"GSM2475739","Control","Ethiopia","TEKHHC81",25,"Female",35871626.5,FALSE
+"GSM2475740","Control","Ethiopia","TEKHHC89",18,"Male",51753405.5,FALSE
+"GSM2475741","PTB","Ethiopia","W23HHC08",20,"Male",41957623,FALSE
+"GSM2475743","Control","Ethiopia","DZHHC10",19,"Male",34903684,FALSE
+"GSM2475744","Control","Ethiopia","TEKHHC04",19,"Male",39309299.5,FALSE
+"GSM2475745","Control","Ethiopia","W23HHC04",40,"Female",43143838.5,FALSE
+"GSM2475746","Control","Ethiopia","W23HHC58",18,"Male",44109266,FALSE
+"GSM2475747","Control","Ethiopia","LDHHC10",26,"Male",34123620.5,FALSE
+"GSM2475749","Control","Ethiopia","W23HHC78",23,"Female",45100352,FALSE
+"GSM2475750","Control","Ethiopia","W23HHC03",18,"Female",39488363,FALSE
