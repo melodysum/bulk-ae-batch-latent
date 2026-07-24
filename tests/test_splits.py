@@ -236,3 +236,18 @@ def test_within_donor_structure_distinguishes_the_two_cohorts():
     assert r["median_within_donor_range_days"] == 400.0
     assert s["supports_within_donor_design"] is False
     assert s["median_within_donor_range_days"] is None
+
+
+def test_same_timepoint_replicates_are_not_a_longitudinal_design():
+    """Regression test. GSE94438 has 20 progressor donors with more than one
+    sample, but every one of them has a within-donor time spread of exactly 0:
+    they are replicates at a single timepoint, not longitudinal sampling. An
+    earlier version flagged count>1 as sufficient and wrongly reported that
+    GSE94438 supported a within-person contrast."""
+    reps = pd.DataFrame({"donor_id": np.repeat([f"r{i}" for i in range(20)], 2),
+                         "days_to_tb": np.repeat(np.linspace(100, 700, 20), 2)})
+    out = timeaxis.donor_time_structure(reps)
+    assert out["n_donors_multi"] == 20            # they do have repeats
+    assert out["n_donors_with_time_spread"] == 0  # but none across time
+    assert out["supports_within_donor_design"] is False
+    assert out["median_within_donor_range_days"] is None

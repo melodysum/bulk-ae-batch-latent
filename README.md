@@ -195,22 +195,28 @@ An earlier revision of this section read the `is.na()` crosstab and concluded th
 
 #### 3.7.1 Donor counts change what this axis is for
 
-Those are sample counts. The independent units are people:
+Those are sample counts. The independent units are people, and the count survives a cleaning cascade. Run on the real metadata:
 
-| cohort | progressor samples | progressor **donors** | samples/donor |
-|---|---|---|---|
-| GSE79362 | 110 | **40** | 2.75 |
-| GSE94438 | 101 | **76** | 1.33 |
-| total | 211 | **116** | 1.82 |
+| step | GSE79362 (samples/donors) | GSE94438 (samples/donors) |
+|---|---|---|
+| all samples | 355 / 144 | 434 / 334 |
+| progressors | 110 / 40 | 101 / **75** |
+| + parseable time | 98 / 33 | 101 / 75 |
+| + drop days < 0 (post-diagnosis) | 85 / 33 | 101 / 75 |
+| + drop days = 0 (day of diagnosis) | **67 / 33** | **101 / 75** |
+
+Two things to note. GSE79362 loses 7 donors at the parsing step — those donors have progressor samples but no usable time. And GSE94438 has **75** progressor donors, not the 76 an earlier count reported: in R, `x[cond]` returns `NA` rows wherever `cond` is `NA`, and with 6 `NA` progression labels `unique()` counted `NA` as a donor.
+
+Final: **168 samples, 108 donors.**
 
 Power to detect a monotone association with time-to-diagnosis (α = 0.05, two-sided):
 
-| true ρ | n=40 (GSE79362) | n=76 (GSE94438) | n=116 (pooled) |
+| true ρ | n=33 (GSE79362) | n=75 (GSE94438) | n=108 (pooled) |
 |---|---|---|---|
-| 0.2 | 0.23 | 0.41 | 0.58 |
-| 0.3 | 0.47 | 0.75 | 0.91 |
-| 0.4 | 0.73 | 0.95 | 0.99 |
-| 0.5 | 0.92 | 1.00 | 1.00 |
+| 0.3 | 0.40 | 0.75 | 0.89 |
+| 0.4 | 0.64 | 0.95 | 0.99 |
+| 0.5 | 0.85 | 1.00 | 1.00 |
+| 0.6 | 0.97 | 1.00 | 1.00 |
 
 **So this axis is an evaluation set, not a training set.** 116 people against ~14,000 genes cannot support fitting an encoder; it comfortably supports *testing* one for moderate effects. That fixes the architecture:
 
@@ -219,13 +225,45 @@ Power to detect a monotone association with time-to-diagnosis (α = 0.05, two-si
 
 The two arms use different data for different jobs, and neither is asked to do something its n cannot support.
 
-#### 3.7.2 The repeated measures are an asset here, for once
+#### 3.7.2 Repeated measures — an asset in one cohort, an illusion in the other
 
-Everywhere else in this audit, repeated sampling is a leakage hazard (§3.2). On this axis it inverts. GSE79362's 2.75 samples per progressor means the *same person* is observed at several distances from diagnosis — say 600 days out and 200 days out. That is a **within-person contrast**, which removes individual baseline expression as a nuisance and is substantially more powerful than comparing different people.
+Everywhere else in this audit, repeated sampling is a leakage hazard (§3.2). On this axis it can invert: a person observed at several distances from diagnosis supplies a **within-person contrast**, which removes individual baseline expression as a nuisance and is far more powerful than comparing different people.
 
-GSE94438, at 1.33 samples/donor, is mostly a between-person design and does not support this.
+Both cohorts appear to offer this. Only one does:
 
-The practical consequence: the two cohorts are not interchangeable halves of one experiment. GSE79362 is where a within-donor mixed model belongs; GSE94438 is the between-person replication. Split design accordingly, and keep donor grouping in place — the within-person contrast is only valid if the folds respect it.
+| cohort | donors with >1 progressor sample | donors with >1 **distinct time** | median within-donor spread |
+|---|---|---|---|
+| GSE79362 | 19 | **19** | **360 days** |
+| GSE94438 | 20 | **0** | — |
+
+Every one of GSE94438's 20 multi-sample donors has a within-donor time spread of **exactly 0 days**. Those are replicates at a single timepoint, not longitudinal sampling.
+
+An earlier version of `donor_time_structure()` tested only `count > 1` and reported `supports_within_donor_design = True` for GSE94438. That was wrong, and it is the kind of wrong that survives review: the sample counts look longitudinal, and nothing errors. The helper now requires a non-zero spread, and `tests/test_splits.py::test_same_timepoint_replicates_are_not_a_longitudinal_design` locks it.
+
+The practical consequence: the two cohorts are not interchangeable halves of one experiment. **GSE79362 (33 donors, 19 longitudinal, 360-day median spread) is where a within-donor mixed model belongs; GSE94438 (75 donors, cross-sectional) is the between-person replication.** Design the split accordingly, and keep donor grouping — the within-person contrast is only valid if the folds respect it.
+
+#### 3.7.3 A third kind of shift: the cohorts sample different parts of the timeline
+
+Distinct from batch effect (§3.1) and comparator shift (§3.3), and equally beyond the reach of batch correction:
+
+| cohort | n | min | Q1 | median | Q3 | max |
+|---|---|---|---|---|---|---|
+| GSE79362 | 67 | 4 | 191 | **274** | 436 | 894 |
+| GSE94438 | 101 | 91 | 213 | **426** | 639 | 730 |
+
+GSE94438's samples sit systematically **further from diagnosis** — median 426 days against 274, and its window never opens closer than 91 days, while GSE79362 reaches down to 4.
+
+This matters because TB progression signal is known to strengthen as diagnosis approaches; that proximity dependence is the central finding of the signature literature. So a model trained on one cohort and tested on the other faces covariate shift **on the target variable itself**. Transfer could fail for that reason alone, with batch effect entirely innocent.
+
+Unlike the other two shifts, this one is fixable by design. Restricting both cohorts to the overlapping window [91, 730] days:
+
+| cohort | samples / donors | median |
+|---|---|---|
+| GSE79362 | 54 / 32 | 282 d |
+| GSE94438 | 96 / 73 | 411 d |
+| **total** | **150 / 105** | — |
+
+The medians still differ, so window restriction alone does not equalise the cohorts, but it removes the non-overlapping tails and makes the comparison interpretable. **Report both the full-range and window-restricted results** — the gap between them is itself a measurement of how much apparent transfer loss is timeline shift rather than technical batch.
 
 **What does work: the progressor-only window.** Restricted to progressors, "days from sampling to TB diagnosis" means the same thing in both cohorts — and because the control group is excluded entirely, **the disjoint-control confound of §3.3 disappears.** n ≈ 199 before cleaning (98 + 101), fewer after sentinels and negative times are removed.
 
@@ -243,8 +281,10 @@ Every claim below was made, checked against the data, and found wrong. They are 
 | 2 | Adversarial correction is warranted because **batch is confounded with the label** in these cohorts | Cramér's V on real metadata | 0.310 vs 0.236, **V = 0.072**, negligible. The doom scenario does not apply; the design contains the counter-examples the method needs. | `audit.confounding_report()`; justification struck from §5.2 |
 | 3 | The disjoint-control problem is solved by switching to the **`Progression` axis** | `table(Progression, TBStatus)` | Exactly collinear inside both cohorts — a pure relabelling. Worse, it renames two *different* control populations to the same string `"Negative"`, so a text-matching guard would pool them. | `audit.independent_axes()` — detects collinearity empirically instead of trusting the registry |
 | 4 | 166 GSE79362 negatives carry follow-up times, so this is **right-censored survival data** | `sum(TimeToTB == "---")` | All 166 are the sentinel — no value at all. Neither cohort has censoring times. True missingness 257/355, not 91/355. | `timeaxis` sentinel handling; regression test on the real 166/79/98/12 structure |
+| 5 | GSE94438 has **76** progressor donors | `nunique()` on parsed metadata | 75. In R, `x[cond]` returns `NA` rows wherever `cond` is `NA`; with 6 `NA` progression labels, `unique()` counted `NA` as a donor. | §3.7.1 recomputed from the CSV |
+| 6 | GSE94438's 1.33 samples/donor still **supports a within-person contrast** | within-donor time spread | All 20 multi-sample donors have a spread of exactly 0 days — replicates at one timepoint, not longitudinal. | `donor_time_structure()` now requires non-zero spread; regression test added |
 
-Two of these (2 and 4) were errors of the same kind: **reasoning from a summary statistic instead of running the check that had already been written.** Error 4 is the sharper one, because the tool that catches it was written in the same session that then bypassed it.
+Four of these (2, 4, 5, 6) share one shape: **a summary statistic was trusted where the underlying rows were not inspected.** Errors 4 and 6 are the sharper pair, because in each case the tool that catches the mistake had already been written — and in 6 the tool itself encoded the same shallow test (`count > 1`) that the prose did.
 
 The methodological residue is the design rule the repo now follows: *a guard that depends on correct manual annotation, or that can be routed around by eyeballing raw output, is not a guard.* Hence `independent_axes()` measures collinearity rather than reading a config field, and `audit_series()` reports a `kind` per row rather than a missingness count.
 
@@ -383,13 +423,13 @@ Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**
 | Study registry + schema adapters | done |
 | Confounding & leakage audit on real metadata | done |
 | LOSO + donor-grouped splitters, assertion-enforced | done |
-| Test suite (leakage & parsing guards verified to fire) | done — 20/20 |
+| Test suite (leakage & parsing guards verified to fire) | done — 21/21 |
 | `Progression` label axis | **resolved: redundant** — no shared supervised axis exists (§3.3) |
 | Count matrices wired to `load_real()` | pending |
 | Baselines (uncorrected / ComBat / PCA / AE) under LOSO | pending |
 | Adversarial + triplet on real data, with ablations | pending |
 | Decomposition: batch effect vs comparator shift (§3.6) | **next** |
-| Progressor-only time-to-diagnosis axis (§3.7) | axis parsed & tested; **116 donors — evaluation set, not training set** |
+| Progressor-only time-to-diagnosis axis (§3.7) | **resolved on real metadata: 168 samples / 108 donors** — evaluation set, not training set |
 | Unsupervised encoder on all 478 donors, evaluated on §3.7 axis | **next** |
 
 ---
@@ -605,22 +645,28 @@ GSE94438  chr  "22 month(s)"  "7 month(s)"  "3 month(s)"  NA
 
 #### 3.7.1 Donor 数改变了这个轴的用途
 
-上面是样本数。独立单位是人:
+上面是样本数。独立单位是人,而且这个数要经过一层清洗才定得下来。在真实 metadata 上跑出来:
 
-| 队列 | progressor 样本 | progressor **donor** | 每人样本数 |
-|---|---|---|---|
-| GSE79362 | 110 | **40** | 2.75 |
-| GSE94438 | 101 | **76** | 1.33 |
-| 合计 | 211 | **116** | 1.82 |
+| 步骤 | GSE79362(样本/donor) | GSE94438(样本/donor) |
+|---|---|---|
+| 全部样本 | 355 / 144 | 434 / 334 |
+| progressor | 110 / 40 | 101 / **75** |
+| + 时间可解析 | 98 / 33 | 101 / 75 |
+| + 剔除 days < 0(确诊后) | 85 / 33 | 101 / 75 |
+| + 剔除 days = 0(确诊当天) | **67 / 33** | **101 / 75** |
+
+两点值得注意。GSE79362 在解析这一步丢掉 7 个 donor——这些人有 progressor 样本但没有可用时间。以及 GSE94438 的 progressor donor 是 **75**,不是早先数出的 76:R 里 `x[cond]` 在 `cond` 为 `NA` 处返回 `NA` 行,而该队列有 6 个 `NA` 的 progression 标签,`unique()` 把 `NA` 当成了一个 donor。
+
+最终:**168 样本,108 donor。**
 
 检出与「到确诊时间」单调关联的功效(α = 0.05,双侧):
 
-| 真实 ρ | n=40(GSE79362) | n=76(GSE94438) | n=116(合并) |
+| 真实 ρ | n=33(GSE79362) | n=75(GSE94438) | n=108(合并) |
 |---|---|---|---|
-| 0.2 | 0.23 | 0.41 | 0.58 |
-| 0.3 | 0.47 | 0.75 | 0.91 |
-| 0.4 | 0.73 | 0.95 | 0.99 |
-| 0.5 | 0.92 | 1.00 | 1.00 |
+| 0.3 | 0.40 | 0.75 | 0.89 |
+| 0.4 | 0.64 | 0.95 | 0.99 |
+| 0.5 | 0.85 | 1.00 | 1.00 |
+| 0.6 | 0.97 | 1.00 | 1.00 |
 
 **所以这个轴是评估集,不是训练集。** 116 个人对约 14,000 个基因,撑不起拟合一个 encoder;但用来**检验**一个 encoder、在中等效应量下是够用的。这就把架构定死了:
 
@@ -629,13 +675,45 @@ GSE94438  chr  "22 month(s)"  "7 month(s)"  "3 month(s)"  NA
 
 两条臂用不同数据干不同的活,谁都没被要求做它样本量撑不起的事。
 
-#### 3.7.2 重复测量在这里罕见地是资产
+#### 3.7.2 重复测量:在一个队列里是资产,在另一个里是幻觉
 
-在这份审计的其他地方,重复采样都是泄漏风险(3.2 节)。在这个轴上它反过来了。GSE79362 每个 progressor 平均 2.75 个样本,意味着**同一个人**在距确诊不同远近处被观测——比如 600 天和 200 天。这是一个**个体内对比**,把个体基线表达作为干扰项消掉,功效显著高于跨个体比较。
+在这份审计的其他地方,重复采样都是泄漏风险(3.2 节)。在这个轴上它可以反过来:同一个人在距确诊不同远近处被观测,提供的是**个体内对比**,把个体基线表达作为干扰项消掉,功效远高于跨个体比较。
 
-GSE94438 每人 1.33 个样本,基本是跨个体设计,不支持这一点。
+两个队列看上去都提供了这一点。实际只有一个:
 
-实际后果:两个队列不是同一个实验的可互换的两半。**GSE79362 是个体内混合模型该待的地方;GSE94438 是跨个体的重复验证。** 划分要按此设计,并且 donor 分组必须保留——个体内对比只有在 fold 尊重它时才成立。
+| 队列 | 有 >1 个 progressor 样本的 donor | 有 >1 个**不同时间点**的 donor | 个体内跨度中位数 |
+|---|---|---|---|
+| GSE79362 | 19 | **19** | **360 天** |
+| GSE94438 | 20 | **0** | — |
+
+GSE94438 那 20 个多样本 donor,**每一个的个体内时间跨度都恰好是 0 天**。它们是单一时间点的重复样本,不是纵向采样。
+
+`donor_time_structure()` 的早期版本只检查 `count > 1`,对 GSE94438 报告 `supports_within_donor_design = True`。这是错的,而且是那种**能躲过审阅**的错:样本计数看起来就像纵向数据,而且不报任何错。现在该函数要求跨度非零,`tests/test_splits.py::test_same_timepoint_replicates_are_not_a_longitudinal_design` 把它锁住。
+
+实际后果:两个队列不是同一个实验的可互换两半。**GSE79362(33 donor,19 个纵向,跨度中位数 360 天)是个体内混合模型该待的地方;GSE94438(75 donor,横断面)是跨个体的重复验证。** 划分要按此设计,且 donor 分组必须保留——个体内对比只有在 fold 尊重它时才成立。
+
+#### 3.7.3 第三种漂移:两个队列采样于时间轴的不同区段
+
+它区别于 batch effect(3.1 节)和对照组漂移(3.3 节),而且同样不是 batch correction 够得着的:
+
+| 队列 | n | 最小 | Q1 | 中位数 | Q3 | 最大 |
+|---|---|---|---|---|---|---|
+| GSE79362 | 67 | 4 | 191 | **274** | 436 | 894 |
+| GSE94438 | 101 | 91 | 213 | **426** | 639 | 730 |
+
+GSE94438 的样本系统性地**离确诊更远**——中位数 426 天对 274 天,而且它的窗口最近只到 91 天,GSE79362 却能低到 4 天。
+
+这一点要紧,是因为 TB 进展信号已知会随确诊临近而增强;这种「距离依赖」正是 signature 文献的核心发现。所以在一个队列上训练、到另一个队列上测试,面对的是**目标变量本身的协变量漂移**。迁移可能仅因这个原因就失败,而 batch effect 完全无辜。
+
+与另外两种漂移不同,这一种可以靠设计消解。把两个队列都限制到重叠窗口 [91, 730] 天:
+
+| 队列 | 样本 / donor | 中位数 |
+|---|---|---|
+| GSE79362 | 54 / 32 | 282 天 |
+| GSE94438 | 96 / 73 | 411 天 |
+| **合计** | **150 / 105** | — |
+
+中位数仍有差距,所以只做窗口限制并不能让两个队列等价,但它切掉了不重叠的尾部,使比较可解释。**全区间和窗口限制两套结果都要报**——两者之差本身就是在测量:表观迁移损失里有多少是时间轴漂移、而非技术性 batch。
 
 **真正可行的是:progressor-only 窗口。** 限定在 progressor 内部,「采样到确诊的天数」在两个队列里含义相同——而且由于对照组被完全排除,**3.3 节那个负类不重叠的混杂随之消失。** 清洗前 n ≈ 199(98 + 101),去掉 sentinel 与负数时间后更少。
 
@@ -653,8 +731,10 @@ GSE94438 每人 1.33 个样本,基本是跨个体设计,不支持这一点。
 | 2 | 该上对抗方法,因为这批队列里 **batch 与 label 混杂** | 在真实 metadata 上算 Cramér's V | 0.310 vs 0.236,**V = 0.072**,negligible。那个失败模式不成立;设计里有方法所需的反例。 | `audit.confounding_report()`;5.2 节删去该理由 |
 | 3 | 换到 **`Progression` 轴**即可解决负类不重叠问题 | `table(Progression, TBStatus)` | 在两个队列内部完全共线——纯改名。更糟的是它把两个**不同的**对照人群统一叫作 `"Negative"`,任何字符串比对的守卫都会放行合并。 | `audit.independent_axes()`——实测共线性,不再信任注册表声明 |
 | 4 | GSE79362 有 166 个阴性带随访时间,所以这是**右删失生存数据** | `sum(TimeToTB == "---")` | 那 166 个全是 sentinel,根本没有值。两个队列都没有删失时间。真实缺失 257/355,而非 91/355。 | `timeaxis` 的 sentinel 处理;针对真实 166/79/98/12 结构的回归测试 |
+| 5 | GSE94438 有 **76** 个 progressor donor | 在解析后的 metadata 上 `nunique()` | 是 75。R 里 `x[cond]` 在 `cond` 为 `NA` 处返回 `NA` 行;该队列有 6 个 `NA` 标签,`unique()` 把 `NA` 当成一个 donor。 | 3.7.1 节改为从 CSV 重算 |
+| 6 | GSE94438 每人 1.33 个样本,仍**支持个体内对比** | 个体内时间跨度 | 20 个多样本 donor 的跨度全部恰好为 0 天——单时间点重复,不是纵向。 | `donor_time_structure()` 改为要求跨度非零;新增回归测试 |
 
-其中两条(2 和 4)属于同一类错误:**拿汇总统计量推理,而没有跑那个已经写好的检查。** 第 4 条更尖锐——因为能抓住它的工具,正是在同一轮里写完、然后被绕过去的。
+其中四条(2、4、5、6)是同一个形状:**信任了汇总统计量,而没有去看底层的行。** 第 4 和第 6 条更尖锐,因为两次能抓住错误的工具都已经写好了——而第 6 条里,工具本身就编码了和文字相同的那个浅层判据(`count > 1`)。
 
 沉淀下来的方法论规则,也是本仓库现在遵循的:*依赖人工正确标注、或者能被「看一眼原始输出」绕过去的守卫,不算守卫。* 因此 `independent_axes()` 实测共线性而不读 config 字段,`audit_series()` 逐行返回 `kind` 而不是一个缺失计数。
 
@@ -793,13 +873,13 @@ MMD + triplet(分布对齐 + 生物结构保持)通常比对抗 + triplet 更容
 | 研究注册表 + schema adapter | 完成 |
 | 真实 metadata 上的混杂与泄漏审计 | 完成 |
 | LOSO + donor-grouped 划分器,断言强制 | 完成 |
-| 测试套件(已验证泄漏与解析守卫会触发) | 完成 — 20/20 |
+| 测试套件(已验证泄漏与解析守卫会触发) | 完成 — 21/21 |
 | `Progression` label 轴 | **已查清:冗余** — 不存在共享有监督轴(3.3 节) |
 | Count 矩阵接入 `load_real()` | 待办 |
 | LOSO 下的 baseline(未校正 / ComBat / PCA / AE) | 待办 |
 | 真实数据上的对抗 + triplet,含 ablation | 待办 |
 | 分解:batch effect vs 对照组漂移(3.6 节) | **下一步** |
-| Progressor-only 到确诊时间轴(3.7 节) | 轴已解析并有测试;**116 donor——评估集,非训练集** |
+| Progressor-only 到确诊时间轴(3.7 节) | **已在真实 metadata 上定案:168 样本 / 108 donor**——评估集,非训练集 |
 | 在全部 478 donor 上无监督训练 encoder,在 3.7 轴上评估 | **下一步** |
 
 ---

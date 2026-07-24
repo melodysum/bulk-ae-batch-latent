@@ -172,13 +172,19 @@ def donor_time_structure(df: pd.DataFrame, donor_col: str = "donor_id",
     g = df.groupby(donor_col)[time_col]
     per = g.size()
     rng = (g.max() - g.min()).loc[per > 1]
+    # A donor with several samples at the SAME time contributes replicates, not
+    # a longitudinal contrast. GSE94438 has 20 such donors, every one with a
+    # spread of exactly 0 days. Counting them as longitudinal would claim a
+    # within-person design the data cannot support, so spread is required.
+    n_spread = int((rng > 0).sum())
     return {
         "n_samples": int(len(df)),
         "n_donors": int(per.size),
         "samples_per_donor": round(float(per.mean()), 3),
         "n_donors_multi": int((per > 1).sum()),
+        "n_donors_with_time_spread": n_spread,
         "median_within_donor_range_days": (
-            float(rng.median()) if len(rng) else None
+            float(rng[rng > 0].median()) if n_spread else None
         ),
-        "supports_within_donor_design": bool((per > 1).sum() >= 10),
+        "supports_within_donor_design": bool(n_spread >= 10),
     }
