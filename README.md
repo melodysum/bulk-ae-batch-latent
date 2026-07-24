@@ -20,6 +20,8 @@ Cohorts: **GSE79362** (ACS adolescent cohort, Zak et al. 2016) and **GSE94438** 
 
 5. Site centering and ComBat leave the result essentially unchanged (ρ = −0.020 and −0.009). They adjust location and scale, and the problem appears as slope heterogeneity between sites.
 
+6. The failure is at the gene level: the two cohorts' gene-wise time-correlations are uncorrelated (ρ = −0.10). Four correction methods, up to a deep generative model, move batch mixing substantially while leaving biological transfer at chance.
+
 > Better batch mixing does not necessarily produce better biological transfer. A visually cleaner latent space may leave the scientific problem unchanged.
 
 ---
@@ -32,7 +34,7 @@ Cohorts: **GSE79362** (ACS adolescent cohort, Zak et al. 2016) and **GSE94438** 
 
 **Results.** The cohorts share no poolable supervised label: their negative classes are disjoint populations. Random sample-level splitting leaks donors in every one of 2000 simulations. Restricted to progressors with a usable time value, 168 samples from 108 donors remain. The signature tracks time to diagnosis in GSE79362 (ρ = −0.449) and not in GSE94438 (ρ = −0.022, 95% CI −0.25 to +0.21). Within GSE79362, using each donor as their own control gives a stronger association from fewer people (ρ = −0.493, p = 0.00018, 19 donors). Within GSE94438, the three sites are heterogeneous, and neither site centering nor ComBat moves the pooled estimate.
 
-**Conclusion.** Not every cross-cohort failure is a batch effect. Comparator definition, sampling window and site-level biological heterogeneity are separate problems, and correction methods that adjust location and scale address only one of them. Study design should be audited before model capacity is increased.
+**Conclusion.** Not every cross-cohort failure is a batch effect. The failure here is at the gene level: the cohorts' progression signals occupy different gene programmes, and four correction methods up to a deep generative model improve batch mixing without moving biological transfer. Comparator definition, sampling window and site-level biological heterogeneity are separate problems, and correction methods that adjust location and scale address only one of them. Study design should be audited before model capacity is increased.
 
 ---
 
@@ -273,7 +275,49 @@ Practical notes: use LayerNorm rather than BatchNorm in the encoder, since Batch
 
 ---
 
-## 7. Limitations
+## 7. Where the failure lives, and why no correction reaches it
+
+Sections 4 to 6 showed that the signature fails to transfer and that neither batch correction nor a time-supervised encoder fixes it. This section locates the failure and explains why it is out of reach. Reproduce with `scripts/run_reproduction.py` and `scripts/run_corrections.py`; outputs in [`results/reproduction.md`](results/reproduction.md) and [`results/corrections.md`](results/corrections.md).
+
+### 7.1 The failure is at the gene level, not the aggregation
+
+Correlating each gene with time in each cohort separately, then correlating the two gene-wise correlation vectors, gives Spearman −0.10 across 15,264 genes. The 200 genes most associated with time in GSE79362 have mean |ρ| = 0.50 there and 0.10 in GSE94438, with sign agreement 31%.
+
+The signature does not fail because of how it averages genes. The individual genes do not carry the same time information in the two cohorts. Each Zak16 gene illustrates it:
+
+| gene | GSE79362 | GSE94438 |
+|---|---|---|
+| GBP5 | −0.482 | −0.094 |
+| ANKRD22 | −0.533 | −0.011 |
+| BATF2 | −0.401 | +0.003 |
+| IFIT3 | −0.408 | −0.008 |
+
+Every interferon gene that tracks progression in GSE79362 collapses to near zero in GSE94438.
+
+### 7.2 It is not timeline shift
+
+If GSE94438 simply sampled too early, matching the time windows would restore agreement. It does not: restricting both cohorts to the first year lowers gene-level reproduction further (Spearman −0.17 within 0–365 days, −0.27 within 0–270 days). The disagreement is not about when the cohorts were sampled.
+
+### 7.3 GSE94438 has a progression signal, in different genes
+
+The genes most correlated with time in GSE94438 are TPM4, MYZAP, SPAG1 and similar, not the interferon programme of the published signature. Each cohort has a time signal; the signals occupy different gene programmes. This is consistent with different progression biology in an adolescent latent-infection cohort versus adult household contacts across three African sites, and it is not something batch correction can reach, because there is no shared signal to preserve.
+
+### 7.4 Four correction methods confirm it
+
+Each method is scored on batch mixing and on biological transfer at the same time. Mixing asks whether the cohorts are still distinguishable; transfer is the Zak16–time correlation that actually matters.
+
+| method | type | iLISI (mix) | batch AUC | GSE79362 transfer | GSE94438 transfer |
+|---|---|---|---|---|---|
+| Uncorrected | — | 0.372 | 1.000 | +0.417 | +0.022 |
+| ComBat | linear | 0.703 | 0.201 | +0.418 | +0.023 |
+| Harmony | non-linear (embedding) | 0.571 | 0.889 | embedding only | embedding only |
+| scVI | deep generative | 0.212 | 0.995 | +0.393 | +0.033 |
+
+![Batch mixing changes; biological transfer does not](results/decoupling.png)
+
+ComBat moves the batch probe from perfect separation to near-chance while GSE94438 transfer moves by 0.001. Across all four methods, from a one-line linear adjustment to a deep generative model, GSE94438 transfer never leaves chance. This is the decoupling stated at the top of the README, now measured: batch mixing and biological transfer are separate axes, and improving the first does not move the second when the cohorts share no signal to begin with.
+
+## 8. Limitations
 
 Site strata are small, between 11 and 39 donors, and the site decomposition was not planned in advance. Q = 6.21 at p = 0.045 justifies the next experiment rather than settling the question. South Africa's ρ = +0.196 has a bootstrap 95% CI of −0.121 to +0.482, which crosses zero. Leave-one-out is stable (+0.162 to +0.258), so it is not driven by a single donor, but the claim that sites point in opposite directions remains suggestive.
 
@@ -285,7 +329,7 @@ No encoder has been evaluated on the real cohorts. Whether the GSE94438 null ref
 
 ---
 
-## 8. Reproducibility
+## 9. Reproducibility
 
 ```bash
 pip install -r requirements.txt
@@ -307,6 +351,9 @@ python scripts/run_site_correction.py
 | `scripts/run_baseline.py` | `results/baseline_timeaxis.md` (section 4) |
 | `scripts/run_site_correction.py` | `results/site_correction.md` (section 5) |
 | `scripts/run_time_encoder.py` | `results/time_encoder.md` (section 6.1) |
+| `scripts/run_reproduction.py` | `results/reproduction.md` (section 7.1-7.3) |
+| `scripts/run_corrections.py` | `results/corrections.md`, `results/decoupling.png` (section 7.4) |
+| `scripts/run_scvi.py` | `results/scvi.md` (section 7.4, needs raw counts) |
 
 | Module | Role |
 |---|---|
@@ -321,7 +368,7 @@ The test suite has 21 tests. Several construct leaking splits or misencoded time
 
 ---
 
-## 9. Status and next steps
+## 10. Status and next steps
 
 | Item | Status |
 |---|---|
@@ -331,6 +378,7 @@ The test suite has 21 tests. Several construct leaking splits or misencoded time
 | Signature versus time baseline | Complete |
 | Site correction test | Complete |
 | Time-supervised encoder under LOSO | Complete, negative (section 6.1) |
+| Correction comparison: ComBat / Harmony / scVI with decoupling metrics | Complete (section 7.4) |
 | Additional independent cohorts | Planned, now the priority |
 | Adversarial and triplet on real data | Deprioritised, see section 5 |
 
@@ -392,6 +440,8 @@ A fuller development record is preserved in [`docs/README_v1_development_log.md`
 
 5. 站点内中心化和 ComBat 基本没有改变结果（ρ = −0.020 与 −0.009）。它们校正的是位置和尺度，而当前问题表现为站点之间的斜率差异。
 
+6. 失败在基因层：两个队列的「基因-时间相关」向量互不相关（ρ = −0.10）。四种校正方法，直到深度生成模型，都大幅改善批次混合，却让生物学迁移停在随机水平。
+
 > 批次混合得更好，不等于生物学迁移更好。潜空间看起来更整齐，科学问题可能一点没变。
 
 ---
@@ -404,7 +454,7 @@ A fuller development record is preserved in [`docs/README_v1_development_log.md`
 
 **结果。** 两个队列没有可合并的有监督标签，因为它们的负类是完全不重叠的人群。按样本随机划分在 2000 次模拟中每次都泄漏 donor。限定在有可用时间值的 progressor 后，剩下 108 个 donor 的 168 个样本。Signature 在 GSE79362 中追踪到确诊时间（ρ = −0.449），在 GSE94438 中不追踪（ρ = −0.022，95% CI −0.25 至 +0.21）。在 GSE79362 内部，让每个人做自己的对照，用更少的人得到更强的关联（ρ = −0.493，p = 0.00018，19 个 donor）。GSE94438 的三个站点之间存在异质性，而站点中心化和 ComBat 都没有移动合并估计值。
 
-**结论。** 不是每一次跨队列失败都是批次效应。对照组定义、采样窗口和站点层面的生物学异质性是彼此独立的问题，而调整位置和尺度的校正方法只处理其中一个。在增加模型容量之前，应当先审计研究设计。
+**结论。** 不是每一次跨队列失败都是批次效应。这里的失败在基因层：两个队列的进展信号落在不同的基因程序上，四种校正方法直到深度生成模型都在改善批次混合而不移动生物学迁移。对照组定义、采样窗口和站点层面的生物学异质性是彼此独立的问题，而调整位置和尺度的校正方法只处理其中一个。在增加模型容量之前，应当先审计研究设计。
 
 ---
 
@@ -645,7 +695,49 @@ GSE79362 内部，按 donor 分组的 5 折交叉验证，33 个 donor：
 
 ---
 
-## 七、局限
+## 七、失败发生在哪一层，以及为什么没有校正够得着它
+
+第四到六节表明 signature 迁移失败，而批次校正和时间监督 encoder 都修不好它。本节定位这个失败并解释它为何不可及。用 `scripts/run_reproduction.py` 和 `scripts/run_corrections.py` 复现，输出见 [`results/reproduction.md`](results/reproduction.md) 与 [`results/corrections.md`](results/corrections.md)。
+
+### 7.1 失败在基因层，不在聚合方式
+
+对每个基因分别在两个队列里与时间求相关，再把两个队列的「基因-时间相关」向量对起来求相关，得到 Spearman −0.10（15,264 个基因）。在 GSE79362 里与时间最相关的 200 个基因，那里平均 |ρ| = 0.50，在 GSE94438 里只有 0.10，符号一致率 31%。
+
+signature 不是因为聚合方式而失败。是单个基因在两个队列里携带的时间信息不同。每个 Zak16 基因都说明这一点：
+
+| 基因 | GSE79362 | GSE94438 |
+|---|---|---|
+| GBP5 | −0.482 | −0.094 |
+| ANKRD22 | −0.533 | −0.011 |
+| BATF2 | −0.401 | +0.003 |
+| IFIT3 | −0.408 | −0.008 |
+
+每一个在 GSE79362 里追踪进展的干扰素基因，到 GSE94438 都塌到接近零。
+
+### 7.2 这不是时间轴偏移
+
+如果 GSE94438 只是采样太早，匹配时间窗就能恢复一致。并没有：把两个队列都限制到第一年，基因层复现反而更低（0–365 天内 Spearman −0.17，0–270 天内 −0.27）。分歧与采样时间无关。
+
+### 7.3 GSE94438 有进展信号，在不同的基因上
+
+GSE94438 里与时间最相关的基因是 TPM4、MYZAP、SPAG1 之类，不是已发表 signature 的干扰素程序。每个队列都有时间信号；信号落在不同的基因程序上。这与「青少年潜伏感染队列」和「横跨三个非洲站点的成人家庭密接」之间进展生物学的不同相符，而这不是批次校正够得着的——因为没有共享信号可供保留。
+
+### 7.4 四种校正方法确认了这一点
+
+每个方法同时在批次混合和生物学迁移两个轴上评分。混合衡量队列是否还可分辨；迁移是真正重要的 Zak16-时间相关。
+
+| 方法 | 类型 | iLISI（混合） | batch AUC | GSE79362 迁移 | GSE94438 迁移 |
+|---|---|---|---|---|---|
+| 未校正 | — | 0.372 | 1.000 | +0.417 | +0.022 |
+| ComBat | 线性 | 0.703 | 0.201 | +0.418 | +0.023 |
+| Harmony | 非线性（嵌入） | 0.571 | 0.889 | 仅嵌入 | 仅嵌入 |
+| scVI | 深度生成 | 0.212 | 0.995 | +0.393 | +0.033 |
+
+![批次混合变化，生物学迁移不变](results/decoupling.png)
+
+ComBat 把批次探针从完全可分推到接近随机，而 GSE94438 迁移变化了 0.001。四种方法，从一行线性调整到深度生成模型，GSE94438 迁移始终没有离开随机水平。这就是 README 开头那句脱钩，现在被测量出来了：批次混合和生物学迁移是两个独立的轴，当两个队列本就没有共享信号时，改善前者不会移动后者。
+
+## 八、局限
 
 站点分层样本小，只有 11 到 39 个 donor，而且站点分解不是事先计划的。Q = 6.21、p = 0.045 证成的是下一个实验，不是一个定论。South Africa 的 ρ = +0.196 自助法 95% CI 为 −0.121 至 +0.482，跨过零。留一法稳定（+0.162 至 +0.258），说明不是单个 donor 造成的，但「各站点方向相反」仍然只是提示性的。
 
@@ -657,7 +749,7 @@ Progressor 时间轴有 108 个 donor，足以检验中等强度的关联，但�
 
 ---
 
-## 八、复现方法
+## 九、复现方法
 
 ```bash
 pip install -r requirements.txt
@@ -679,6 +771,9 @@ python scripts/run_site_correction.py
 | `scripts/run_baseline.py` | `results/baseline_timeaxis.md`（第四节） |
 | `scripts/run_site_correction.py` | `results/site_correction.md`（第五节） |
 | `scripts/run_time_encoder.py` | `results/time_encoder.md`（6.1 节） |
+| `scripts/run_reproduction.py` | `results/reproduction.md`（7.1-7.3 节） |
+| `scripts/run_corrections.py` | `results/corrections.md`、`results/decoupling.png`（7.4 节） |
+| `scripts/run_scvi.py` | `results/scvi.md`（7.4 节，需原始 counts） |
 
 | 模块 | 作用 |
 |---|---|
@@ -693,7 +788,7 @@ python scripts/run_site_correction.py
 
 ---
 
-## 九、当前状态与下一步
+## 十、当前状态与下一步
 
 | 事项 | 状态 |
 |---|---|
@@ -703,6 +798,7 @@ python scripts/run_site_correction.py
 | Signature 与时间的基线 | 完成 |
 | 站点校正检验 | 完成 |
 | LOSO 下的时间监督 encoder | 完成，否定结果（6.1 节） |
+| 校正方法对比：ComBat / Harmony / scVI + 脱钩指标 | 完成（7.4 节） |
 | 补充独立队列 | 计划中，现为首要 |
 | 真实数据上的对抗与 triplet | 降级，见第五节 |
 

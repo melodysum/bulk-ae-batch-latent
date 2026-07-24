@@ -37,3 +37,14 @@ export_counts("GSE94438")
 The `>= 20` filter is this project's choice and differs from the sibling DE
 analysis, which used a group-size rule. That is why the shared gene count is
 15,264 here and 14,128 there.
+
+## Raw counts (for scVI)
+
+`scripts/run_scvi.py` needs the raw count matrices, not log-CPM:
+
+```
+GSE79362_counts_csv.gz
+GSE94438_counts_csv.gz
+```
+
+Regenerate with the same R session, writing raw `cnt[keep, ]` instead of `lcpm`.
