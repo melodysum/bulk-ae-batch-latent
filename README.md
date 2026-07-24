@@ -25,6 +25,7 @@ Two things make this repo different from most batch-correction code:
 | `src/tbbatch/timeaxis.py` | Parses `TimeToTB` into days across cohorts. Handles unit mismatch, the non-`NA` `"---"` sentinel, and post-diagnosis negative times; returns an explicit `kind` per row rather than coercing. Also donor-level power and within-donor spread (§3.7.1–2). |
 | `src/tbbatch/splits.py` | Leave-one-study-out (outer) and donor-grouped stratified k-fold (inner), plus a batch-balanced minibatch sampler. Every split is asserted before it is returned; a leaking split **raises** rather than quietly scoring. |
 | `scripts/run_audit.py` | One command → `results/design_audit.md`. |
+| `scripts/run_site_correction.py` | Tests whether site centering or ComBat recovers the GSE94438 association, with the invariance argument for why not. → `results/site_correction.md` |
 | `scripts/run_baseline.py` | Signature score vs time-to-diagnosis on real expression: per-cohort correlation, within- vs between-donor split, and Cochran's Q site heterogeneity. → `results/baseline_timeaxis.md` |
 | `data/metadata/` | Sample-level metadata for both cohorts (no expression values), so the audit is reproducible without a Bioconductor install. See its README for provenance. |
 | `tests/test_splits.py` | 10 tests. Three construct leaking splits deliberately and assert the guards fire. |
@@ -347,6 +348,54 @@ Success and failure are both legible in advance. And it sharpens §3.6: site her
 
 ---
 
+## 3C. Site correction does not recover the signal — and provably cannot
+
+`scripts/run_site_correction.py` → [`results/site_correction.md`](results/site_correction.md). Run before writing any encoder, on the reasoning that if a one-line linear correction already works then a neural method must beat it, and if no correction can work then the batch-removal framing itself is wrong.
+
+| method | pooled rho | p | movement |
+|---|---|---|---|
+| raw | −0.022 | 0.85 | — |
+| site-wise gene centering | −0.020 | 0.86 | +0.002 |
+| ComBat (site as batch) | −0.009 | 0.94 | +0.013 |
+| **GSE79362 target** | **−0.449** | | **0.427 to cover** |
+
+Nothing moves. And the per-site correlations are untouched:
+
+| site | donors | raw | centering | ComBat |
+|---|---|---|---|---|
+| Ethiopia | 11 | −0.563 | −0.563 | −0.563 |
+| South Africa | 39 | +0.196 | +0.196 | +0.192 |
+| The Gambia | 25 | −0.279 | −0.279 | −0.274 |
+
+### The reason is a theorem, not a result
+
+Spearman correlation is invariant under any monotone transform. Applying arbitrary affine maps to one site's scores:
+
+| transform | rho |
+|---|---|
+| `1.0*score + 0.0` | +0.196420 |
+| `3.7*score + 2.1` | +0.196420 |
+| `0.2*score + 100.0` | +0.196420 |
+
+Identical to six decimal places. **Centering subtracts a per-site constant; ComBat applies a per-site location and scale adjustment. Both are monotone within site, so neither can alter a within-site rank correlation** — and once per-site offsets are gone, the pooled value is essentially fixed by the within-site values.
+
+The failure in GSE94438 is heterogeneous **slopes**, not heterogeneous **offsets**. Batch correction addresses offsets.
+
+### This changes the modelling plan
+
+An adversarial encoder optimises site-indistinguishability. The cheapest route to that objective is removing per-site location and scale — exactly what ComBat did, and it changed nothing. For an encoder to help here it would have to learn a transform that is **non-monotone within site**, and nothing in the adversarial objective encourages that.
+
+So for this failure, the batch-removal framing is the wrong tool — not underpowered, wrong. If the encoder is to earn its place it should receive the time axis as an **explicit objective** (a time-regression head, or a triplet defined on time distance), evaluated under leave-one-study-out. That is a different architecture from the one this repo started with, and §3B/§3C are the reason for the change.
+
+### What this does and does not establish
+
+- **Established:** the pooled association is absent in GSE94438, and per-site offsets are not the reason. No location/scale correction can change that.
+- **Not established:** that the sites genuinely point in opposite directions. South Africa's +0.196 has a bootstrap 95% CI of [−0.121, +0.482], crossing zero. Leave-one-out is stable (+0.162 to +0.258), so it is not one donor's doing — but three sites at n = 11–39 cannot settle it.
+- **Ruled out as explanations:** timeline shift (site medians 244 / 335 / 335 days are comparable) and single-donor outliers.
+- **Still open:** whether the GSE94438 null reflects real biological heterogeneity between settings, a signature that does not transfer, or insufficient signal at these sample sizes. Distinguishing those needs more cohorts, not a better model.
+
+---
+
 ## 4. Design principles (from first principles)
 
 The cross-cohort bulk RNA-seq setting is a textbook **small-n / high-p** problem: two cohorts, ~14k shared genes, and — per §3.2 — only 478 truly independent individuals behind 783 samples. Three design constraints follow:
@@ -484,9 +533,11 @@ Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**
 | `Progression` label axis | **resolved: redundant** — no shared supervised axis exists (§3.3) |
 | Count matrices exported and intersected (15,264 shared genes) | done |
 | **Baseline: signature score vs time-to-diagnosis (§3B)** | **done** |
+| **Site correction test — negative, with an invariance proof (§3C)** | **done** |
 | Count matrices wired to `load_real()` | pending |
 | Baselines (uncorrected / ComBat / PCA / AE) under LOSO | pending |
-| Adversarial + triplet on real data, with ablations | pending |
+| Adversarial + triplet on real data, with ablations | **deprioritised** — see §3C |
+| Time-supervised encoder (regression head / time-triplet) under LOSO | **next** |
 | Decomposition: batch effect vs comparator shift (§3.6) | **next** |
 | Progressor-only time-to-diagnosis axis (§3.7) | **resolved on real metadata: 168 samples / 108 donors** — evaluation set, not training set |
 | Unsupervised encoder on all 478 donors, evaluated on §3.7 axis | **next** |
@@ -534,6 +585,7 @@ Swap the reconstruction loss from MSE to a **negative-binomial (NB) likelihood**
 | `src/tbbatch/timeaxis.py` | 把 `TimeToTB` 跨队列解析为天。处理单位不一致、非 `NA` 的 `"---"` 缺失标记、以及确诊后的负数时间;每行显式返回 `kind`,不做强制转换。另含 donor 级功效计算与个体内跨度(3.7.1–2 节)。 |
 | `src/tbbatch/splits.py` | Leave-one-study-out(外层)+ donor-grouped 分层 k-fold(内层),另含 batch-balanced minibatch 采样器。每个 split 返回前都跑断言;**泄漏就 raise**,而不是默默给你一个好看的数字。 |
 | `scripts/run_audit.py` | 一条命令 → `results/design_audit.md`。 |
+| `scripts/run_site_correction.py` | 检验站点中心化 / ComBat 能否恢复 GSE94438 的关联,并给出「为何不能」的不变性论证。→ `results/site_correction.md` |
 | `scripts/run_baseline.py` | 真实表达上的 signature 得分 vs 到确诊时间:分队列相关、个体内/个体间分解、站点异质性 Cochran's Q。→ `results/baseline_timeaxis.md` |
 | `data/metadata/` | 两个队列的样本级 metadata(**不含表达值**),使审计无需安装 Bioconductor 即可复现。来源见其 README。 |
 | `tests/test_splits.py` | 10 个测试。其中三个**故意构造泄漏的 split**,验证守卫真的会拦。 |
@@ -856,6 +908,54 @@ Cochran's Q = 6.21,df = 2,**p = 0.045**,**I² = 68%**。
 
 ---
 
+## 3C. 站点校正恢复不了信号——而且可以证明它不可能恢复
+
+`scripts/run_site_correction.py` → [`results/site_correction.md`](results/site_correction.md)。在写任何 encoder 之前先跑,理由是:如果一行线性校正就有效,神经方法就必须打赢它;如果任何校正都无效,那么 batch-removal 这个框架本身就是错的。
+
+| 方法 | 合并 rho | p | 移动量 |
+|---|---|---|---|
+| 未校正 | −0.022 | 0.85 | — |
+| 站点内基因中心化 | −0.020 | 0.86 | +0.002 |
+| ComBat(站点为 batch) | −0.009 | 0.94 | +0.013 |
+| **GSE79362 靶标** | **−0.449** | | **还差 0.427** |
+
+纹丝不动。而且各站点的相关系数完全没变:
+
+| 站点 | donor | 未校正 | 中心化 | ComBat |
+|---|---|---|---|---|
+| Ethiopia | 11 | −0.563 | −0.563 | −0.563 |
+| South Africa | 39 | +0.196 | +0.196 | +0.192 |
+| The Gambia | 25 | −0.279 | −0.279 | −0.274 |
+
+### 原因是一条定理,不是一个实验结果
+
+Spearman 相关在任意单调变换下不变。对某一个站点的得分施加任意仿射变换:
+
+| 变换 | rho |
+|---|---|
+| `1.0*score + 0.0` | +0.196420 |
+| `3.7*score + 2.1` | +0.196420 |
+| `0.2*score + 100.0` | +0.196420 |
+
+小数点后六位完全一致。**中心化是减去一个站点内常数;ComBat 是站点内的位置与尺度调整。二者在站点内都是单调的,所以都无法改变站点内的秩相关**——而一旦站点间偏移被消除,合并值基本上就由各站点内的值决定了。
+
+GSE94438 的失败是**斜率**异质,不是**偏移**异质。而 batch correction 处理的是偏移。
+
+### 这改变了建模方案
+
+对抗式 encoder 优化的是「站点不可分辨」。达成这个目标最省力的路径就是消除站点内的位置和尺度——正是 ComBat 做的事,而它什么也没改变。要让 encoder 在这里起作用,它必须学到一个**在站点内非单调**的变换,而对抗目标里没有任何东西鼓励这一点。
+
+所以对于这个失败,batch-removal 框架是**错的工具**——不是功效不足,是不对路。如果 encoder 要证明自己有存在价值,应该把时间轴作为**显式目标**交给它(时间回归头,或定义在时间距离上的 triplet),并在 leave-one-study-out 下评估。这与本仓库最初的架构不同,而 3B / 3C 就是改变的理由。
+
+### 这确立了什么,没确立什么
+
+- **已确立:** GSE94438 的合并关联确实不存在,而且站点间偏移不是原因。任何位置/尺度校正都改变不了这一点。
+- **未确立:** 各站点真的方向相反。South Africa 的 +0.196 自助法 95% CI 为 [−0.121, +0.482],跨过零。留一法稳定(+0.162 至 +0.258),所以不是某一个 donor 造成的——但 n = 11–39 的三个站点定不了这件事。
+- **已排除的解释:** 时间轴漂移(各站点中位数 244 / 335 / 335 天,可比)与单个 donor 的离群影响。
+- **仍然开放:** GSE94438 的零结果究竟反映不同地区真实的生物学异质性、signature 不迁移、还是在这个样本量下信号不足。区分这三者需要更多队列,不是更好的模型。
+
+---
+
 ## 四、设计理念(第一性原理)
 
 bulk RNA-seq 跨队列场景是典型的 **small-n / high-p**:两个 cohort、~14k 共享基因,而且按 3.2 节,783 个样本背后只有 478 个真正独立的个体。这决定了三条设计约束:
@@ -993,9 +1093,11 @@ MMD + triplet(分布对齐 + 生物结构保持)通常比对抗 + triplet 更容
 | `Progression` label 轴 | **已查清:冗余** — 不存在共享有监督轴(3.3 节) |
 | Count 矩阵已导出并取交集(15,264 共享基因) | 完成 |
 | **Baseline:signature 得分 vs 到确诊时间(3B 节)** | **完成** |
+| **站点校正检验——否定结果,附不变性证明(3C 节)** | **完成** |
 | Count 矩阵接入 `load_real()` | 待办 |
 | LOSO 下的 baseline(未校正 / ComBat / PCA / AE) | 待办 |
-| 真实数据上的对抗 + triplet,含 ablation | 待办 |
+| 真实数据上的对抗 + triplet,含 ablation | **降级** — 见 3C 节 |
+| 时间监督 encoder(回归头 / 时间 triplet),LOSO 下评估 | **下一步** |
 | 分解:batch effect vs 对照组漂移(3.6 节) | **下一步** |
 | Progressor-only 到确诊时间轴(3.7 节) | **已在真实 metadata 上定案:168 样本 / 108 donor**——评估集,非训练集 |
 | 在全部 478 donor 上无监督训练 encoder,在 3.7 轴上评估 | **下一步** |
