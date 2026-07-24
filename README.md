@@ -345,7 +345,9 @@ Site strata are small, between 11 and 39 donors, and the site decomposition was 
 
 The progressor time axis has 108 donors, which is enough to test a moderate association but not to fit an encoder. At 33 donors, power to detect ρ = 0.4 is 0.64; at 75 donors it is 0.95.
 
-No encoder has been evaluated on the real cohorts. Whether the GSE94438 null reflects genuine biological heterogeneity between settings, a signature that does not transfer, or insufficient signal at these sample sizes cannot be settled with two cohorts.
+Whether the missing GSE94438 gradient reflects the sampling window alone, or also some genuine between-setting difference, cannot be settled with the cohorts available here.
+
+The cohort search was exhausted rather than left open. All 50 studies in curatedTBData were screened. Exactly two carry both a progression label and a continuous time-to-diagnosis field: GSE79362 and GSE94438, both included. GSE107994 has a progression label but only 9 progressor donors and no continuous time, so it serves the discrimination question only (section 7.0). Other longitudinal-looking studies (GSE84076, GSE107104, GSE107991, GSE107992) lack a progression label entirely. Adding a fourth cohort with continuous time therefore requires raw GEO data outside the curatedTBData collection, with the per-study metadata cleaning that this project's audit layer was built to handle but which was not attempted here. That is the single most useful extension, and it is a data-acquisition task, not a modelling one.
 
 ---
 
@@ -372,6 +374,7 @@ python scripts/run_site_correction.py
 | `scripts/run_site_correction.py` | `results/site_correction.md` (section 5) |
 | `scripts/run_time_encoder.py` | `results/time_encoder.md` (section 6.1) |
 | `scripts/run_two_questions.py` | `results/two_questions.md` (section 7.0) |
+| `scripts/scout_cohorts.R` | screens all curatedTBData studies for a usable time axis (Limitations) |
 | `scripts/run_reproduction.py` | `results/reproduction.md` (sections 7.2-7.5) |
 | `scripts/run_corrections.py` | `results/corrections.md`, `results/decoupling.png` (section 7.4) |
 | `scripts/run_scvi.py` | `results/scvi.md` (section 7.4, needs raw counts) |
@@ -401,7 +404,7 @@ The test suite has 21 tests. Several construct leaking splits or misencoded time
 | Time-supervised encoder under LOSO | Complete, negative (section 6.1) |
 | Correction comparison: ComBat / Harmony / scVI with decoupling metrics | Complete (section 7.4) |
 | Third cohort GSE107994 for discrimination check | Complete (section 7.0) |
-| Additional independent cohorts with continuous time | Planned |
+| Additional continuous-time cohorts | Exhausted within curatedTBData; requires raw GEO (see Limitations) |
 | Adversarial and triplet on real data | Deprioritised, see section 5 |
 
 ---
@@ -787,7 +790,9 @@ ComBat 把批次探针从完全可分推到接近随机，而 GSE94438 迁移变
 
 Progressor 时间轴有 108 个 donor，足以检验中等强度的关联，但不足以拟合一个 encoder。在 33 个 donor 下，检出 ρ = 0.4 的功效是 0.64；75 个 donor 下是 0.95。
 
-尚未有任何 encoder 在真实队列上评估过。GSE94438 的零结果究竟反映不同地区真实的生物学异质性、signature 不迁移、还是该样本量下信号不足，两个队列定不了。
+GSE94438 缺失的梯度究竟只反映采样窗口，还是也包含某种真实的地区间差异，用这里可得的队列定不了。
+
+队列检索是穷尽的，不是留白的。curatedTBData 全部 50 个队列都已筛查。同时带进展标签和连续到确诊时间字段的恰好两个：GSE79362 和 GSE94438，均已纳入。GSE107994 有进展标签但只有 9 个 progressor donor、无连续时间，故仅服务判别问题（7.0 节）。其他看起来纵向的队列（GSE84076、GSE107104、GSE107991、GSE107992）根本没有进展标签。因此，要加入第四个带连续时间的队列，就需要 curatedTBData 之外的 GEO 原始数据，以及逐队列的 metadata 清洗——这正是本项目审计层为之而建、但此处未尝试的工作。这是最有价值的单一扩展，而且它是数据获取任务，不是建模任务。
 
 ---
 
@@ -814,6 +819,7 @@ python scripts/run_site_correction.py
 | `scripts/run_site_correction.py` | `results/site_correction.md`（第五节） |
 | `scripts/run_time_encoder.py` | `results/time_encoder.md`（6.1 节） |
 | `scripts/run_two_questions.py` | `results/two_questions.md`（7.0 节） |
+| `scripts/scout_cohorts.R` | 筛查 curatedTBData 全部队列是否有可用时间轴（局限一节） |
 | `scripts/run_reproduction.py` | `results/reproduction.md`（7.2-7.5 节） |
 | `scripts/run_corrections.py` | `results/corrections.md`、`results/decoupling.png`（7.4 节） |
 | `scripts/run_scvi.py` | `results/scvi.md`（7.4 节，需原始 counts） |
@@ -843,7 +849,7 @@ python scripts/run_site_correction.py
 | LOSO 下的时间监督 encoder | 完成，否定结果（6.1 节） |
 | 校正方法对比：ComBat / Harmony / scVI + 脱钩指标 | 完成（7.4 节） |
 | 第三队列 GSE107994 判别检验 | 完成（7.0 节） |
-| 更多带连续时间的独立队列 | 计划中 |
+| 更多带连续时间的队列 | curatedTBData 内已穷尽；需 GEO 原始数据（见局限） |
 | 真实数据上的对抗与 triplet | 降级，见第五节 |
 
 ---
