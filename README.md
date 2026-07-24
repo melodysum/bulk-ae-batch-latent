@@ -2,9 +2,11 @@
 
 **English** | [中文](#中文说明)
 
-A design-first analysis of two tuberculosis whole-blood cohorts, showing why batch correction alone cannot rescue a mis-specified cross-cohort comparison.
+> **TL;DR** A published TB signature separates progressors from non-progressors in all three cohorts (AUC 0.68 to 0.87). What fails in one cohort is only its *time gradient*, and that turns out to track the sampling window, not a batch effect. Four correction methods, up to a deep generative model, improve batch mixing without touching it. The point: audit the study design before reaching for a bigger model.
 
-Cohorts: **GSE79362** (ACS adolescent cohort, Zak et al. 2016) and **GSE94438** (GC6-74 household contacts, Suliman et al. 2018).
+A design-first analysis of three tuberculosis whole-blood cohorts, separating four sources of cross-cohort discrepancy that all look alike in a PCA plot but need different responses.
+
+Cohorts: **GSE79362** (ACS adolescents, Zak et al. 2016), **GSE94438** (GC6-74 household contacts, Suliman et al. 2018), and **GSE107994** (Leicester adult contacts, Singhania et al. 2018).
 
 ---
 
@@ -447,9 +449,11 @@ A fuller development record is preserved in [`docs/README_v1_development_log.md`
 
 # 先检查研究设计，再使用深度学习：区分结核转录组中的批次效应、对照人群差异和站点异质性
 
-对两个结核全血队列做的设计优先分析，说明为什么单靠批次校正救不回一个设定本身就有问题的跨队列比较。
+> **一句话** 一个已发表的结核 signature 在三个队列都能区分 progressor 与 non-progressor（AUC 0.68 至 0.87）。某个队列失败的只是它的*时间梯度*，而这跟着采样窗口走，不是批次效应。四种校正方法（直到深度生成模型）都在改善批次混合而碰不到它。要点：在动用更大的模型之前，先审计研究设计。
 
-队列：**GSE79362**（ACS 青少年队列，Zak et al. 2016）与 **GSE94438**（GC6-74 家庭密接，Suliman et al. 2018）。
+对三个结核全血队列做的设计优先分析，区分四种在 PCA 图上看起来一样、却需要不同对策的跨队列差异来源。
+
+队列：**GSE79362**（ACS 青少年，Zak et al. 2016）、**GSE94438**（GC6-74 家庭密接，Suliman et al. 2018）、**GSE107994**（Leicester 成人密接，Singhania et al. 2018）。
 
 ---
 
