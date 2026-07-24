@@ -14,3 +14,5 @@ env/
 # expression matrices - too large for git, fetch from curatedTBData
 data/expr/*.csv.gz
 *.csv.gz
+data/expr/*.gz
+data/expr/*.csv
