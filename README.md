@@ -215,7 +215,7 @@ The observed problem is heterogeneity in the direction of the relationship, not 
 
 ## 6. Implications for modelling
 
-The autoencoder and adversarial components in this repository currently run on synthetic data. They have not been evaluated on the TB cohorts, and no claim is made that they improve real cross-cohort transfer.
+The adversarial components in this repository run on synthetic data only. The autoencoder has now been evaluated on the TB cohorts as part of the time-supervised experiment below, where it did not improve on a fixed signature.
 
 Two results bear on how they should be developed.
 
@@ -223,7 +223,41 @@ Two results bear on how they should be developed.
 
 **A linear baseline is competitive on the synthetic task.** On synthetic data a plain autoencoder does not remove batch at all: a linear probe recovers batch from its latent with accuracy 1.00. A one-line `removeBatchEffect` reduces that to 0.37. Any additional machinery has to beat that baseline before it is worth the complexity.
 
-The next step is therefore to give the encoder the time axis as an explicit objective, such as a time-regression head or a triplet loss defined on time distance, evaluated under leave-one-study-out. That differs from the architecture this repository began with, and sections 4 and 5 are the reason for the change.
+### 6.1 Result: a fixed signature beats every fitted model
+
+Section 5 pointed to giving the encoder the time axis as an explicit objective instead. That experiment has now been run. Four arms of increasing capacity, evaluated by donor-level Spearman rho between predicted and observed days-to-diagnosis. Reproduce with `scripts/run_time_encoder.py`; output in [`results/time_encoder.md`](results/time_encoder.md).
+
+Within GSE79362, donor-grouped 5-fold cross-validation, 33 donors:
+
+| Arm | Fitted parameters | rho |
+|---|---|---|
+| A Zak16 signature | **none** | **+0.417** |
+| B Ridge on 2000 HVGs | ~2,000 | +0.331 |
+| D Autoencoder + joint time head | ~10^5 | +0.317 |
+| C Autoencoder latent + ridge head | ~10^5 | +0.194 |
+
+Cross-cohort, leave-one-study-out:
+
+| Arm | Train 94438, test 79362 | Train 79362, test 94438 |
+|---|---|---|
+| A Zak16 signature | **+0.417** | +0.022 |
+| B Ridge on 2000 HVGs | −0.110 | −0.094 |
+| C Autoencoder latent + ridge | −0.290 | −0.079 |
+| D Autoencoder + time head | +0.007 | −0.101 |
+
+Two patterns, both clean.
+
+**Performance falls as capacity rises.** Within-cohort, the ordering is A > B > D > C, and the zero-parameter arm wins. A published signature encodes accumulated prior knowledge that 33 donors cannot re-derive from 15,264 genes.
+
+**Every fitted method fails on transfer.** Five of six cross-cohort estimates are negative, meaning predictions run against the true ordering rather than merely failing to track it. Arm A transfers unchanged because it is never fitted.
+
+This is a sample-size result rather than a verdict on any architecture. It also matches what the audit predicted: the target relationship is absent in GSE94438 (section 4.1), so training there cannot learn it, and 33 donors in GSE79362 is too small a base to generalise from.
+
+Note on arm A: rho is +0.417 here against −0.449 in section 4, because the sign is flipped so that higher means later, and because the shared gene space excludes `FCGR1B`, leaving 15 of 16 genes.
+
+### 6.2 What would need to change
+
+More cohorts, not more capacity. Nothing in these results suggests the architecture is at fault; they suggest 108 labelled donors across two cohorts is below the threshold at which representation learning helps on this target. Adding independent progressor cohorts is the only change that alters that arithmetic.
 
 ### Synthetic modelling notes
 
@@ -272,6 +306,7 @@ python scripts/run_site_correction.py
 | `scripts/run_audit.py` | `results/design_audit.md` (section 3) |
 | `scripts/run_baseline.py` | `results/baseline_timeaxis.md` (section 4) |
 | `scripts/run_site_correction.py` | `results/site_correction.md` (section 5) |
+| `scripts/run_time_encoder.py` | `results/time_encoder.md` (section 6.1) |
 
 | Module | Role |
 |---|---|
@@ -295,8 +330,8 @@ The test suite has 21 tests. Several construct leaking splits or misencoded time
 | Time axis parsing and cleaning | Complete |
 | Signature versus time baseline | Complete |
 | Site correction test | Complete |
-| Time-supervised encoder under LOSO | Planned, next |
-| Additional independent cohorts | Planned |
+| Time-supervised encoder under LOSO | Complete, negative (section 6.1) |
+| Additional independent cohorts | Planned, now the priority |
 | Adversarial and triplet on real data | Deprioritised, see section 5 |
 
 ---
@@ -552,7 +587,7 @@ Spearman 相关只取决于秩，因此任何保持组内顺序的变换都不�
 
 ## 六、对建模的启示
 
-本仓库中的 autoencoder 和对抗组件目前只在合成数据上运行。它们尚未在结核队列上评估，也没有任何「已改善真实跨队列迁移」的宣称。
+本仓库中的对抗组件只在合成数据上运行。Autoencoder 已作为下面时间监督实验的一部分在结核队列上评估过，结果是没有超过固定 signature。
 
 有两条结果影响后续开发方向。
 
@@ -560,7 +595,41 @@ Spearman 相关只取决于秩，因此任何保持组内顺序的变换都不�
 
 **在合成任务上线性基线已经很有竞争力。** 合成数据上，朴素 autoencoder 完全没有去掉批次：线性探针从它的潜表示中识别批次的准确率是 1.00。一行 `removeBatchEffect` 把这个数字降到 0.37。任何额外的机制都得先打赢这条基线，才谈得上值不值得增加复杂度。
 
-因此下一步是把时间轴作为显式目标交给 encoder，例如时间回归头，或定义在时间距离上的 triplet loss，并在留一队列下评估。这与本仓库最初的架构不同，第四、五节就是改变的理由。
+### 6.1 结果：固定 signature 打败了所有拟合出来的模型
+
+第五节指出的方向是把时间轴作为显式目标交给 encoder。这个实验已经做完。四个容量递增的 arm，指标是 donor 层面预测值与真实天数的 Spearman rho。用 `scripts/run_time_encoder.py` 复现，输出见 [`results/time_encoder.md`](results/time_encoder.md)。
+
+GSE79362 内部，按 donor 分组的 5 折交叉验证，33 个 donor：
+
+| Arm | 拟合参数量 | rho |
+|---|---|---|
+| A Zak16 signature | **零** | **+0.417** |
+| B 2000 个 HVG 上的 Ridge | 约 2,000 | +0.331 |
+| D Autoencoder + 联合时间头 | 约 10^5 | +0.317 |
+| C Autoencoder 潜表示 + ridge 头 | 约 10^5 | +0.194 |
+
+跨队列，留一队列：
+
+| Arm | 训 94438 测 79362 | 训 79362 测 94438 |
+|---|---|---|
+| A Zak16 signature | **+0.417** | +0.022 |
+| B 2000 个 HVG 上的 Ridge | −0.110 | −0.094 |
+| C Autoencoder 潜表示 + ridge | −0.290 | −0.079 |
+| D Autoencoder + 时间头 | +0.007 | −0.101 |
+
+两个规律都很干净。
+
+**容量越大，表现越差。** 队列内部的排序是 A > B > D > C，零参数的那一档赢了。一个已发表的 signature 编码了长期积累的先验知识，33 个 donor 无法从 15,264 个基因里把它重新推导出来。
+
+**所有拟合过的方法在迁移上都失败了。** 六个跨队列估计中有五个为负，也就是说预测与真实顺序反向，而不只是没能追踪上。Arm A 因为从不拟合，迁移时数值不变。
+
+这是一个样本量层面的结果，而不是对某种架构的判决。它也与审计的预测一致：目标关系在 GSE94438 中本就不存在（4.1 节），在那里训练学不到它；而 GSE79362 的 33 个 donor 也不足以支撑泛化。
+
+关于 arm A 的说明：这里是 +0.417，第四节是 −0.449，差别在于符号被翻转成「越大表示越晚」，以及共享基因空间不含 `FCGR1B`，实际用了 16 个基因中的 15 个。
+
+### 6.2 需要改变的是什么
+
+是更多队列，不是更大容量。这些结果里没有任何东西指向架构问题；它们指向的是：两个队列合计 108 个标注 donor，低于表征学习在这个目标上能起作用的门槛。唯一能改变这个算术的是补充独立的 progressor 队列。
 
 ### 合成数据上的建模记录
 
@@ -609,6 +678,7 @@ python scripts/run_site_correction.py
 | `scripts/run_audit.py` | `results/design_audit.md`（第三节） |
 | `scripts/run_baseline.py` | `results/baseline_timeaxis.md`（第四节） |
 | `scripts/run_site_correction.py` | `results/site_correction.md`（第五节） |
+| `scripts/run_time_encoder.py` | `results/time_encoder.md`（6.1 节） |
 
 | 模块 | 作用 |
 |---|---|
@@ -632,8 +702,8 @@ python scripts/run_site_correction.py
 | 时间轴解析与清洗 | 完成 |
 | Signature 与时间的基线 | 完成 |
 | 站点校正检验 | 完成 |
-| LOSO 下的时间监督 encoder | 计划中，下一步 |
-| 补充独立队列 | 计划中 |
+| LOSO 下的时间监督 encoder | 完成，否定结果（6.1 节） |
+| 补充独立队列 | 计划中，现为首要 |
 | 真实数据上的对抗与 triplet | 降级，见第五节 |
 
 ---
