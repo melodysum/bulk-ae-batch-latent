@@ -79,6 +79,37 @@ The sibling repository [TB-Whole-Blood-Transcriptomics-GSE79362-GSE94438](https:
 
 ---
 
+## 2b. Models and methods at a glance
+
+Every model and correction method in this repository, and — critically — whether it was run on the real TB cohorts or only on synthetic data. The synthetic pieces are demonstrations of failure modes; they carry no claim about real transfer.
+
+| Method | Purpose | Data |
+|---|---|---|
+| Zak16 gene-set score | Mean of 16 signature genes as a TB risk score (no fitting) | Real |
+| Ridge regression | Predict days-to-diagnosis from ~2,000 highly variable genes | Real |
+| Autoencoder (AE) | Compress ~2,000 genes into a 16-dim latent | Real and synthetic |
+| AE + Ridge | Unsupervised latent, then linear prediction of time | Real |
+| AE + time head | AE and a time-regression head trained end to end | Real |
+| Adversarial autoencoder | Discriminator tries to strip batch from the latent | Synthetic only |
+| Triplet loss | Pull similar samples together, push different apart | Synthetic only |
+| Logistic-regression probe | Test whether batch is still recoverable after correction | Real and synthetic |
+| scVI | Deep generative model, negative-binomial counts, batch as covariate | Real |
+| ComBat | Empirical-Bayes location/scale batch correction | Real |
+| Harmony | Batch integration in PCA space | Real |
+
+The part that is a genuine **model comparison** is four arms of increasing capacity, all on the real progressor time axis (section 6.1):
+
+| Arm | Model | Within-GSE79362 ρ |
+|---|---|---|
+| A | Zak16 gene-set score (no fitting) | **0.417** |
+| B | Ridge regression | 0.331 |
+| D | AE + time head (end to end) | 0.317 |
+| C | AE latent + Ridge | 0.194 |
+
+**The complex models do not beat the simple fixed gene score.** At 33 to 75 effective donors, added capacity does not help; the result is about sample size, not architecture (section 6.1). One caveat: this "Zak16" is a 16-gene mean, not the original paper's full pair-based (k-TSP) classifier, so it is a fair within-repository baseline but not a reproduction of the published model.
+
+---
+
 ## 3. Design audit
 
 Everything in this section derives from metadata alone. No expression values are needed, and each result constrains what the analysis is allowed to claim. Reproduce with `scripts/run_audit.py`; full output in [`results/design_audit.md`](results/design_audit.md).
@@ -523,6 +554,37 @@ Metadata 与表达数据通过 `curatedTBData` 获取。counts 按「至少 20 �
 GSE107994 是加入的第三个独立队列（英国成人 LTBI 密接），用于检验 signature 的行为是否可推广。它的 progressor 数少（9 个 donor）且没有连续到确诊时间字段，因此只用于判别问题（7.0 节），不用于时间梯度。
 
 姊妹仓库 [TB-Whole-Blood-Transcriptomics-GSE79362-GSE94438](https://github.com/melodysum/TB-Whole-Blood-Transcriptomics-GSE79362-GSE94438) 用同样的队列报告了 14,128 个共享基因。差异来自过滤规则，不是数据本身。
+
+---
+
+## 2b. 模型与方法总览
+
+本仓库用到的每一个模型和校正方法，以及——最关键的——它是在**真实 TB 队列**上运行，还是**只在合成数据**上测试。合成部分是失败模式的演示，不对真实迁移做任何宣称。
+
+| 方法 | 用途 | 数据 |
+|---|---|---|
+| Zak16 基因集平均分 | 16 个 signature 基因的平均表达作为 TB 风险分（不训练） | 真实 |
+| Ridge 回归 | 用约 2,000 个高变基因预测距确诊天数 | 真实 |
+| Autoencoder（AE） | 把约 2,000 个基因压成 16 维潜表示 | 真实 + 合成 |
+| AE + Ridge | 无监督潜表示，再线性预测时间 | 真实 |
+| AE + 时间头 | AE 与时间回归头端到端训练 | 真实 |
+| 对抗式 Autoencoder | 判别器尝试从潜空间剥离批次 | 仅合成 |
+| Triplet Loss | 拉近相似样本、推开不同样本 | 仅合成 |
+| Logistic 回归探针 | 检验校正后批次是否仍可识别 | 真实 + 合成 |
+| scVI | 深度生成模型，负二项建模 counts，批次作协变量 | 真实 |
+| ComBat | 经验贝叶斯位置/尺度批次校正 | 真实 |
+| Harmony | 在 PCA 空间做批次整合 | 真实 |
+
+真正构成**模型比较**的是四组容量递增的模型，全部跑在真实 progressor 时间轴上（6.1 节）：
+
+| Arm | 模型 | GSE79362 内 ρ |
+|---|---|---|
+| A | Zak16 基因集平均分（不训练） | **0.417** |
+| B | Ridge 回归 | 0.331 |
+| D | AE + 时间头（端到端） | 0.317 |
+| C | AE 潜表示 + Ridge | 0.194 |
+
+**复杂模型没有超过简单的固定基因分数。** 在 33 到 75 个有效 donor 下，增加容量并无帮助；这是关于样本量的结论，不是关于架构（6.1 节）。一点限定：这里的「Zak16」是 16 基因平均分，不是原论文完整的成对（k-TSP）分类器，所以它是仓库内部一个公允的基线，但不是对已发表模型的复现。
 
 ---
 
